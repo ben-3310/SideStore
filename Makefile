@@ -167,6 +167,7 @@ test:
 BUILD_CONFIG ?= Release
 MARKETING_VERSION ?= 
 BUNDLE_ID_SUFFIX ?= 
+SIMULATOR_OS ?= latest
 # Common build settings for xcodebuild
 COMMON_BUILD_SETTINGS = \
 	-project AltStore.xcodeproj \
@@ -201,7 +202,7 @@ build-and-test:
 	@echo ""
 	@echo "Performing a build and running tests..."
 	@xcodebuild test \
-		-destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.0' \
+		-destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=$(SIMULATOR_OS)' \
 		-resultBundlePath build/tests/test-results.xcresult \
     	-enableCodeCoverage YES \
 		$(COMMON_BUILD_SETTINGS)
@@ -213,7 +214,7 @@ build-tests:
 	@echo "Performing a build-for-testing..."
 	@xcodebuild build-for-testing \
     	-enableCodeCoverage YES \
-		-destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.0' \
+		-destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=$(SIMULATOR_OS)' \
 		$(COMMON_BUILD_SETTINGS)
 
 run-tests:
@@ -224,7 +225,7 @@ run-tests:
 	@xcodebuild test-without-building \
     	-enableCodeCoverage YES \
 		-resultBundlePath build/tests/test-results.xcresult \
-		-destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.0' \
+		-destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=$(SIMULATOR_OS)' \
 		$(COMMON_BUILD_SETTINGS)
 
 boot-sim-async:
