@@ -193,7 +193,7 @@ class FetchProvisioningProfilesOperation: ResultOperation<[String: ALTProvisioni
                 updatedParentBundleID = effectiveParentBundleID + "." + team.identifier // Append just team identifier to make it harder to track.
             }
 
-            if let parentApp = parentApp,
+            if parentApp != nil,
                app.bundleIdentifier.hasPrefix(parentBundleID + ".") {
                 let suffix = String(app.bundleIdentifier.dropFirst(parentBundleID.count))
                 bundleID = updatedParentBundleID + suffix

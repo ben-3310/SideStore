@@ -96,7 +96,7 @@ final class PairingFileManager: NSObject, UIDocumentPickerDelegate {
             let data = try Data(contentsOf: url)
             guard let pairingString = String(data: data, encoding: .utf8) else {
                 if completion == nil {
-                    if let rootVC = UIApplication.shared.windows.first?.rootViewController as? LaunchViewController {
+                    if let rootVC = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.windows.first?.rootViewController as? LaunchViewController {
                         rootVC.displayError("Unable to read pairing file")
                     }
                 } else {
@@ -114,7 +114,7 @@ final class PairingFileManager: NSObject, UIDocumentPickerDelegate {
             UserDefaults.standard.isPairingReset = false
             
             if completion == nil {
-                if let rootVC = UIApplication.shared.windows.first?.rootViewController as? LaunchViewController {
+                if (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.windows.first?.rootViewController is LaunchViewController {
                     Task.detached {
                         do {
                             try await reinitializePairingData(pairingFile: pairingString)
@@ -128,7 +128,7 @@ final class PairingFileManager: NSObject, UIDocumentPickerDelegate {
             }
         } catch {
             if completion == nil {
-                if let rootVC = UIApplication.shared.windows.first?.rootViewController as? LaunchViewController {
+                if let rootVC = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.windows.first?.rootViewController as? LaunchViewController {
                     rootVC.displayError("Unable to read pairing file")
                 }
             } else {
@@ -141,7 +141,7 @@ final class PairingFileManager: NSObject, UIDocumentPickerDelegate {
 
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
         if completion == nil {
-            if let rootVC = UIApplication.shared.windows.first?.rootViewController as? LaunchViewController {
+            if let rootVC = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.windows.first?.rootViewController as? LaunchViewController {
                 rootVC.displayError("Choosing a pairing file was cancelled. Please re-open the app and try again.")
             }
         } else {

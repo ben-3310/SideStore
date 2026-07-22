@@ -97,7 +97,6 @@ final class HealthCheckViewModel: ObservableObject {
         let overrideEffective = TunnelConfig.shared.overrideEffective
         
         let pairingType = Minimuxer.shared.getPairingFileType()
-        let isRp = pairingType == .rppairing
         let protocolStr: String
         switch pairingType {
         case .rppairing:

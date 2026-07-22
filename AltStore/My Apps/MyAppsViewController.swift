@@ -1955,7 +1955,7 @@ extension MyAppsViewController
             {
                 actions.append(backupAction)
             }
-            else if let _ = UTTypeCopyDeclaration(installedApp.installedAppUTI as CFString)?.takeRetainedValue() as NSDictionary?, !UserDefaults.standard.isLegacyDeactivationSupported
+            else if UTType(installedApp.installedAppUTI) != nil, !UserDefaults.standard.isLegacyDeactivationSupported
             {
                 // Allow backing up inactive apps if they are still installed,
                 // but on an iOS version that no longer supports legacy deactivation.

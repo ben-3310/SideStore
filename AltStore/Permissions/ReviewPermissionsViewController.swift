@@ -343,7 +343,7 @@ extension ReviewPermissionsViewController
 @available(iOS 17, *)
 #Preview(traits: .portrait) {
     let navigationController: UINavigationController = {
-        _ = DatabaseManager.shared.startForPreview()
+        DatabaseManager.shared.startForPreview()
         
         let app = AnyApp(name: "Delta", bundleIdentifier: "com.rileytestut.Delta", url: nil, storeApp: nil)
         let permissions: [ALTEntitlement] = [

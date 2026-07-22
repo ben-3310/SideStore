@@ -279,7 +279,7 @@ final class AuthenticationOperation: ResultOperation<(ALTTeam, ALTCertificate?, 
             
             if let altCertificate = altCertificate, !self.skipCertificateProvisioning {
                 Task {
-                    let didShowInstructions = await self.showInstructionsIfNecessary()
+                    _ = await self.showInstructionsIfNecessary()
                     
                     let signer = ALTSigner(team: altTeam, certificate: altCertificate)
                     AltSign.setLogging(OperationsLoggingControl.getFromDatabase(for: AuthenticationOperation.self))

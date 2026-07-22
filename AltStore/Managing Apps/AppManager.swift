@@ -146,7 +146,7 @@ extension AppManager
                         guard app.isActive else { continue }
                     }
                     
-                    let uti = UTTypeCopyDeclaration(app.installedAppUTI as CFString)?.takeRetainedValue() as NSDictionary?
+                    let uti = UTType(app.installedAppUTI)
                     if uti == nil && !legacySideloadedApps.contains(app.bundleIdentifier)
                     {
                         // This UTI is not declared by any apps, which means this app has been deleted by the user.
@@ -1380,7 +1380,7 @@ private extension AppManager
                 context.error = error
             case .success(let provisioningProfiles):
                 context.provisioningProfiles = provisioningProfiles
-                debugLog("PROVISIONING PROFILES \(context.provisioningProfiles)")
+                debugLog("PROVISIONING PROFILES \(String(describing: context.provisioningProfiles))")
             }
         }
         fetchProvisioningProfilesOperation.addDependency(refreshAnisetteDataOperation)
@@ -1674,7 +1674,7 @@ private extension AppManager
                 case .failure(ALTServerError.unknownRequest), .failure(OperationError.appNotFound(name: app.name)):
                     // Fall back to installation if AltServer doesn't support newer provisioning profile requests,
                     // OR if the cached app could not be found and we may need to redownload it.
-                    app.managedObjectContext?.performAndWait { // Must performAndWait to ensure we add operations before we return.
+                    _ = app.managedObjectContext?.performAndWait { // Must performAndWait to ensure we add operations before we return.
                         Task {
                             switch await minimuxerStatus {
                             case .ready:
