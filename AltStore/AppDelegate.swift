@@ -119,6 +119,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             else
             {
                 debugLog("Started DatabaseManager.")
+
+                Task {
+                    await DefaultSourcePackImporter.shared.importIfNeeded()
+                }
             }
         }
         
