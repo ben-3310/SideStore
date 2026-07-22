@@ -41,6 +41,9 @@ This guide assumes you:
     `../SideStore_Dependencies` does not already exist. The check aborts rather
     than risking a move into an existing directory:
 
+    Do not use this scenario if `Dependencies` or any nested submodule contains
+    uncommitted changes; save or commit them first.
+
     ```zsh
     if [ -e ../SideStore_Dependencies ] || [ -L ../SideStore_Dependencies ]; then
       echo "Aborting: ../SideStore_Dependencies already exists; do not move Dependencies."
