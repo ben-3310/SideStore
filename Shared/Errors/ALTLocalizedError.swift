@@ -41,7 +41,7 @@ public extension ALTLocalizedError
     }
 }
 
-public protocol ALTErrorCode: RawRepresentable where RawValue == Int
+public protocol ALTErrorCode: RawRepresentable, Sendable where RawValue == Int
 {
     associatedtype Error: ALTLocalizedError where Error.Code == Self
     static var errorDomain: String { get } // Optional

@@ -88,3 +88,8 @@ Dependencies/minimuxer-*/
 local/
 Dependencies/idevice/
 .worktrees/
+
+# Локальная конфигурация asc и служебное состояние проверки skills
+.asc/config.json
+.asc/skills-check.json
+.asc/*.lock*

@@ -9,3 +9,7 @@
 - Перед будь-якою операцією, яка зачіпає `Dependencies`, дозволені лише
   перевірки `ls -ld Dependencies` і `readlink Dependencies`.
 - Будь-яка зміна посилання або його цілі потребує явного дозволу користувача.
+
+## asc cli reference
+
+See `ASC.md` for the command catalog and workflows.

@@ -81,6 +81,64 @@ class OpenSSLModernizationTests(unittest.TestCase):
                 self.assertNotIn(symbol, certificates_manager)
 
 
+class QuickStartSafetyTests(unittest.TestCase):
+    def test_error_codes_are_sendable(self) -> None:
+        localized_error = source_text("Shared/Errors/ALTLocalizedError.swift")
+
+        self.assertIn(
+            "public protocol ALTErrorCode: RawRepresentable, Sendable where RawValue == Int",
+            localized_error,
+        )
+
+    def test_widget_configuration_intent_declares_both_availability_domains(self) -> None:
+        intent = source_text("AltWidget/Intents/ViewAppIntent.swift")
+
+        self.assertIn(
+            "@available(iOS 17, *)\n"
+            "@available(iOSApplicationExtension 17, *)\n"
+            "struct SelectAppIntent: WidgetConfigurationIntent",
+            intent,
+        )
+
+    def test_widget_timeline_entries_are_immutable(self) -> None:
+        provider = source_text("AltWidget/Providers/AppsTimelineProvider.swift")
+
+        self.assertIn("let entries = self.makeEntries(for: apps, in: context)", provider)
+        self.assertNotIn("var entries = self.makeEntries(for: apps, in: context)", provider)
+
+    def test_flattened_quick_start_artifacts_are_not_xcode_project_references(self) -> None:
+        project = source_text("AltStore.xcodeproj/project.pbxproj")
+
+        self.assertNotIn("UsersbenRepoSideStore", project)
+        self.assertNotIn("UsersbenLibraryMobile Documents", project)
+
+    def test_deployment_target_remains_ios_15(self) -> None:
+        project = source_text("AltStore.xcodeproj/project.pbxproj")
+
+        for configuration_id in ("A85A51462F4B4532002E2E11", "A85A51472F4B4532002E2E11"):
+            with self.subTest(configuration=configuration_id):
+                configuration = pbx_object(project, configuration_id)
+                self.assertIn("IPHONEOS_DEPLOYMENT_TARGET = 15.0;", configuration)
+                self.assertNotIn("IPHONEOS_DEPLOYMENT_TARGET = 17.0;", configuration)
+                self.assertNotIn("IPHONEOS_DEPLOYMENT_TARGET = 18.6;", configuration)
+
+    def test_altstore_core_disables_eager_linking(self) -> None:
+        configuration = source_text("xcconfigs/AltStoreCore.xcconfig")
+
+        self.assertIn("EAGER_LINKING = NO", configuration)
+
+    def test_xcode_build_phases_have_intentional_dependency_behavior(self) -> None:
+        project = source_text("AltStore.xcodeproj/project.pbxproj")
+        sidebackup_phase = pbx_object(project, "A8E00D3F2D0C9C6D000DD2C7")
+
+        self.assertNotIn("A8D768282F52F0D4002356C4", project)
+        self.assertIn("alwaysOutOfDate = 1;", sidebackup_phase)
+        self.assertIn(
+            '"$(PROJECT_DIR)/AltStore/Resources/SideBackup.ipa",',
+            sidebackup_phase,
+        )
+
+
 class Xcode27ListedWarningsTests(unittest.TestCase):
     def test_project_records_xcode_27_upgrade(self) -> None:
         project = source_text("AltStore.xcodeproj/project.pbxproj")

@@ -14,11 +14,11 @@ CODE_SIGN_ENTITLEMENTS = ./AltStore/AltStoreFree.entitlements
 // Codesigning settings defined optionally, see `CodeSigning.xcconfig.example`
 #include? "CodeSigning.xcconfig"
 
-PRODUCT_NAME = SideStore
+PRODUCT_NAME = benStore
 
-BASE_BUNDLE_ID                                  = $(ORG_IDENTIFIER).SideStore
+BASE_BUNDLE_ID                                  = $(ORG_IDENTIFIER).benStore
 MAIN_BUNDLE_IDENTIFIER[config=Debug]            = $(BASE_BUNDLE_ID).$(DEVELOPMENT_TEAM)
-MAIN_BUNDLE_IDENTIFIER[config=Release]          = $(BASE_BUNDLE_ID)
+MAIN_BUNDLE_IDENTIFIER[config=Release]          = $(BASE_BUNDLE_ID).$(DEVELOPMENT_TEAM)
 APP_GROUP_IDENTIFIER                            = $(MAIN_BUNDLE_IDENTIFIER)
 ICLOUD_CONTAINER_IDENTIFIER                     = iCloud.$(ORG_IDENTIFIER).$(PROJECT_NAME)
 
