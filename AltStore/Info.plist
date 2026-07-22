@@ -237,6 +237,12 @@
 		<string>audio</string>
 		<string>fetch</string>
 		<string>remote-notification</string>
+		<string>nearby-interaction</string>
+		<string>screen-capture</string>
+		<string>external-accessory</string>
+		<string>processing</string>
+		<string>location</string>
+		<string>push-to-talk</string>
 	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>
