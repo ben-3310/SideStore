@@ -34,9 +34,21 @@ class RunnerWorkflowTests(unittest.TestCase):
         self.assertEqual(runs_on_value("alpha.yml"), "macos-26")
 
     def test_trusted_release_workflows_select_installed_xcode(self) -> None:
+        hosted_setup = (
+            "- name: Setup Xcode (GitHub-hosted)",
+            "uses: maxim-lobanov/setup-xcode@v1.6.0",
+            'xcode-version: "26.6"',
+        )
+        self_hosted_preflight = (
+            "- name: Verify Xcode (self-hosted)",
+            "xcodebuild -version | grep -F 'Xcode 26.6'",
+        )
+
         for workflow_name in ("nightly.yml", "stable.yml"):
+            text = workflow_text(workflow_name)
             with self.subTest(workflow=workflow_name):
-                self.assertIn('xcode-version: "26.6"', workflow_text(workflow_name))
+                for fragment in hosted_setup + self_hosted_preflight:
+                    self.assertIn(fragment, text)
 
     def test_trusted_release_workflows_do_not_mutate_shared_homebrew(self) -> None:
         required_fragments = (

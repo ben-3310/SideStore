@@ -132,9 +132,10 @@ runs-on: [self-hosted, macOS, ARM64, sidestore, xcode-26-6]
 ```
 
 Шаг подготовки зависимостей становится условно идемпотентным: на self-hosted
-runner он проверяет `ldid`, `xcbeautify` и `wget`, а не изменяет Homebrew. Setup Xcode
-должен выбрать уже установленный Xcode 26.6 либо workflow задаёт
-`DEVELOPER_DIR` напрямую после проверки версии.
+runner он проверяет `ldid`, `xcbeautify` и `wget`, а не изменяет Homebrew.
+`maxim-lobanov/setup-xcode` выполняется только на GitHub-hosted runner, потому
+что action вызывает `sudo xcode-select`. Self-hosted runner без `sudo` вместо
+этого проверяет `DEVELOPER_DIR` и точную версию уже установленного Xcode 26.6.
 
 Simulator destinations в `Makefile` используют `OS=latest`, чтобы Xcode выбрал
 установленный iOS 26.5 runtime вместо отсутствующего жёстко заданного 26.0.

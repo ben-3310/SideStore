@@ -471,6 +471,11 @@ xcode-version: "26.4"
 xcode-version: "26.6"
 ```
 
+Сам action запускать только при `runner.environment == 'github-hosted'`. Для
+self-hosted добавить отдельный шаг без `sudo`, проверяющий точный
+`DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` и вывод
+`xcodebuild -version` с `Xcode 26.6`.
+
 Шаг `brew install ldid xcbeautify` заменить парой:
 
 ```yaml
