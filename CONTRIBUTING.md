@@ -35,7 +35,10 @@ This guide assumes you:
 
     For local development, you may keep `Dependencies` beside this checkout and
     replace it with a relative link. CI and ordinary recursive clones may retain
-    their normal `Dependencies` directory.
+    their normal `Dependencies` directory. The examples below use
+    `../SideStore_Dependencies` for a primary checkout; the verifier accepts any
+    relative target that resolves to a directory containing the required
+    dependencies.
 
     **New external location.** Use these commands only when
     `../SideStore_Dependencies` does not already exist. The check aborts rather

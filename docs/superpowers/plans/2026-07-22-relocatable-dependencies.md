@@ -12,9 +12,11 @@
 
 - Do not modify Xcode paths, application sources, contents of `Dependencies`, or nested gitlinks.
 - The verifier never creates, deletes, moves, or replaces `Dependencies`.
-- Accept a directory from a recursive checkout and a symlink to a directory.
+- Accept a directory from a recursive checkout and a relative symlink that
+  resolves to a directory; reject absolute symlink targets.
 - Require `AltSign`, `em_proxy`, and `minimuxer` directories.
-- The local link target is exactly `../SideStore_Dependencies`.
+- `../SideStore_Dependencies` is the recommended primary-checkout example, not
+  a required stored symlink target.
 
 ---
 
