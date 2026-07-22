@@ -10,29 +10,29 @@ def source_text(relative_path: str) -> str:
 
 
 class AltSignCleanupTests(unittest.TestCase):
-    def test_dump_macho_info_is_in_private_extension_baseline(self) -> None:
+    def test_dump_macho_info_is_not_in_a_private_extension(self) -> None:
         application = source_text(
             "Dependencies/AltSign/Sources/Model/ALTApplication.swift"
         )
-        entitlements_start = application.index("// MARK: - Entitlements")
-        extensions_start = application.index("// MARK: - Extensions")
-        entitlements_section = application[entitlements_start:extensions_start]
+        self.assertIn(
+            "\n\nextension ALTApplication {\n    @objc\n    public func dumpMachOInfo()",
+            application,
+        )
 
-        self.assertIn("private extension ALTApplication", entitlements_section)
-        self.assertIn("public func dumpMachOInfo()", entitlements_section)
-
-    def test_certificate_logging_uses_optional_name_baseline(self) -> None:
+    def test_certificate_logging_uses_non_optional_name(self) -> None:
         operations = source_text(
             "Dependencies/AltSign/Sources/ALTAppleAPI+Operations.swift"
         )
 
-        self.assertIn('$0.name ?? "nil"', operations)
-        self.assertIn('certificate.name ?? "nil"', operations)
+        self.assertIn('"\\($0.name) (\\($0.identifier ?? "nil"))"', operations)
+        self.assertIn('certificate.name) (ID: \\(certificate.identifier ?? "nil")', operations)
+        self.assertNotIn('$0.name ?? "nil"', operations)
+        self.assertNotIn('certificate.name ?? "nil"', operations)
 
-    def test_decrypt_creates_unused_combined_ciphertext_baseline(self) -> None:
+    def test_decrypt_does_not_create_unused_combined_ciphertext(self) -> None:
         bridge = source_text("Dependencies/AltSign/SwiftBridge/CoreCryptoBridge.swift")
 
-        self.assertIn("let combined = ciphertext + tag", bridge)
+        self.assertNotIn("let combined = ciphertext + tag", bridge)
 
 
 class OpenSSLModernizationTests(unittest.TestCase):
