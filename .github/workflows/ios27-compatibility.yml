@@ -1,0 +1,69 @@
+name: SideStore iOS 27 Compatibility
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ios27-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compatibility:
+    runs-on: [self-hosted, macOS, ARM64, sidestore, xcode-27-0, ios-27]
+    timeout-minutes: 90
+    env:
+      SIMULATOR_OS: "27.0"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Verify Xcode 27 toolchain
+        run: |
+          test "$DEVELOPER_DIR" = "/Applications/Xcode-beta.app/Contents/Developer"
+          xcodebuild -version | grep -Fx 'Xcode 27.0'
+          xcrun simctl list runtimes | grep -F "iOS 27.0 (27.0"
+          command -v ldid
+          command -v xcbeautify
+          command -v wget
+
+      - name: Repository regression checks
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
+            -s scripts/ci -p 'test_*.py' -v
+
+      - name: Archive compatibility build
+        run: python3 scripts/ci/workflow.py build
+
+      - name: Build for iOS 27 Simulator
+        run: python3 scripts/ci/workflow.py tests-build
+
+      - name: Boot iOS 27 Simulator
+        run: |
+          python3 - <<'PY'
+          import json
+          import subprocess
+
+          runtime_id = "com.apple.CoreSimulator.SimRuntime.iOS-27-0"
+          devices = json.loads(
+              subprocess.check_output(["xcrun", "simctl", "list", "devices", "-j"])
+          )["devices"][runtime_id]
+          udid = next(
+              device["udid"]
+              for device in devices
+              if device["name"] == "iPhone 17 Pro" and device["isAvailable"]
+          )
+
+          try:
+              subprocess.run(["xcrun", "simctl", "boot", udid], check=False)
+              subprocess.run(
+                  ["xcrun", "simctl", "bootstatus", udid, "-b"],
+                  check=True,
+              )
+          finally:
+              subprocess.run(["xcrun", "simctl", "shutdown", udid], check=False)
+          PY

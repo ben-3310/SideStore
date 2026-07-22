@@ -33,6 +33,26 @@ class RunnerWorkflowTests(unittest.TestCase):
         self.assertEqual(runs_on_value("pr.yml"), "macos-26")
         self.assertEqual(runs_on_value("alpha.yml"), "macos-26")
 
+    def test_ios27_compatibility_workflow_is_trusted_and_pinned(self) -> None:
+        text = workflow_text("ios27-compatibility.yml")
+
+        self.assertEqual(
+            runs_on_value("ios27-compatibility.yml"),
+            "[self-hosted, macOS, ARM64, sidestore, xcode-27-0, ios-27]",
+        )
+        self.assertNotIn("pull_request:", text)
+        self.assertIn('SIMULATOR_OS: "27.0"', text)
+        self.assertIn("xcodebuild -version | grep -Fx 'Xcode 27.0'", text)
+        self.assertIn('grep -F "iOS 27.0 (27.0', text)
+        self.assertIn("python3 scripts/ci/workflow.py build", text)
+        self.assertIn("python3 scripts/ci/workflow.py tests-build", text)
+        self.assertIn(
+            'runtime_id = "com.apple.CoreSimulator.SimRuntime.iOS-27-0"',
+            text,
+        )
+        self.assertNotIn("upload-release", text)
+        self.assertNotIn("CROSS_REPO_PUSH_KEY", text)
+
     def test_trusted_release_workflows_select_installed_xcode(self) -> None:
         hosted_setup = (
             "- name: Setup Xcode (GitHub-hosted)",
