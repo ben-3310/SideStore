@@ -16,7 +16,7 @@
 - `.asc/config.json`, `.asc/artifacts/`, `.asc/runs/` и secret-bearing local state не добавлять в commit.
 - Источник данных: `/Users/ben/Library/Mobile Documents/iCloud~is~workflow~my~workflows/Documents/RepoInstaller/Settings/pack.json`, который сейчас указывает на `RepoInstaller/Packs/default.json`.
 - Bundled resource должен быть committed snapshot, а не runtime-ссылкой на iCloud-файл.
-- Bundled resource должен иметь `version == 1`, `name == "Default"` и ровно 81 URL в `repos`.
+- Bundled resource должен иметь `version == 1`, `name == "Default"` и ровно 81 URL в `repos`; ожидаемая пара с/без завершающего `/` для `pokemmo.com/altstore` даёт 80 уникальных normalized source IDs и не должна импортироваться дважды.
 - Importer запускается после успешного `DatabaseManager.shared.start` и не блокирует запуск UI.
 - Importer не использует `AppManager.add(_:presentingViewController:)`, потому что этот flow требует ручной confirmation.
 - Перед fetch importer вычисляет `Source.sourceID(from:)` и пропускает уже существующие sources.
@@ -104,7 +104,13 @@ class DefaultSourcePackTests(unittest.TestCase):
         self.assertTrue(schemes <= {"http", "https"})
 
         normalized = [normalized_source_id(url) for url in repos]
-        self.assertEqual(len(normalized), len(set(normalized)))
+        self.assertEqual(len(set(normalized)), 80)
+        duplicates = {source_id for source_id in normalized if normalized.count(source_id) > 1}
+        self.assertEqual(duplicates, {"pokemmo.com/altstore"})
+        self.assertEqual(
+            [url for url in repos if normalized_source_id(url) == "pokemmo.com/altstore"],
+            ["https://pokemmo.com/altstore/", "https://pokemmo.com/altstore"],
+        )
 
         serialized = json.dumps(pack)
         self.assertNotIn("Mobile Documents", serialized)
@@ -219,7 +225,7 @@ final class DefaultSourcePackImporter
 
     private let userDefaults: UserDefaults
 
-    init(userDefaults: UserDefaults = .shared)
+    init(userDefaults: UserDefaults = UserDefaults.shared)
     {
         self.userDefaults = userDefaults
     }

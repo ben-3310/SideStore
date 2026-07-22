@@ -49,6 +49,11 @@ Importer хранит в `UserDefaults.shared` приватный marker пос�
 Это сохраняет пользовательские изменения и не создаёт дубликаты при повторном
 запуске или обновлении pack.
 
+Bundled snapshot сохраняет все 81 URL исходного pack в исходном порядке. Пара
+`https://pokemmo.com/altstore/` и `https://pokemmo.com/altstore` является
+ожидаемым нормализованным дубликатом: importer добавляет первый источник и
+пропускает второй, поэтому snapshot содержит 80 уникальных source identifiers.
+
 Marker обновляется после завершения всего прохода по pack, даже если отдельные
 репозитории недоступны, заблокированы или имеют невалидный JSON. Это важно,
 чтобы приложение не создавало 81 сетевой запрос на каждом старте. Новый проход
@@ -78,7 +83,8 @@ resource является programming error: importer логирует её и �
 
 - contract test для `AltStore/Resources/DefaultSources.json`: resource существует,
   имеет `version == 1`, содержит ровно 81 URL, все URL имеют схему `http` или
-  `https`, после нормализации URL нет дубликатов;
+  `https`, после нормализации получаются ровно 80 уникальных identifiers, а
+  единственный дубликат — ожидаемая пара `pokemmo.com/altstore`;
 - contract/static test для importer: он загружает именно bundled resource,
   имеет marker-key/idempotency guard, вызывает `Source.sourceID(from:)` перед
   fetch, использует `AppManager.shared.fetchSource`, сохраняет context и не
