@@ -34,13 +34,14 @@ jobs:
 
       - name: Install build dependencies
         if: runner.environment == 'github-hosted'
-        run: brew install ldid xcbeautify
+        run: brew install ldid xcbeautify wget
 
       - name: Verify build dependencies
         if: runner.environment == 'self-hosted'
         run: |
           command -v ldid
           command -v xcbeautify
+          command -v wget
 
       - name: Setup Env
         run: |

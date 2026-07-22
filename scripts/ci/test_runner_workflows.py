@@ -42,11 +42,12 @@ class RunnerWorkflowTests(unittest.TestCase):
         required_fragments = (
             "- name: Install build dependencies",
             "runner.environment == 'github-hosted'",
-            "run: brew install ldid xcbeautify",
+            "run: brew install ldid xcbeautify wget",
             "- name: Verify build dependencies",
             "runner.environment == 'self-hosted'",
             "command -v ldid",
             "command -v xcbeautify",
+            "command -v wget",
         )
 
         for workflow_name in ("nightly.yml", "stable.yml"):

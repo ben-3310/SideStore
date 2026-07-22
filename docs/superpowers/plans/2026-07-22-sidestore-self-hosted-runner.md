@@ -85,9 +85,12 @@ for command_name in git python3 make bash zip unzip curl shasum; do
 done
 /opt/homebrew/bin/brew --version
 curl -fsSIL https://github.com >/dev/null
+pmset -g custom
 ```
 
-Expected: все команды найдены, GitHub доступен по HTTPS.
+Expected: все команды найдены, GitHub доступен по HTTPS. Для постоянной
+доступности runner установить `sudo pmset -c sleep 0`, если `sleep` в секции
+AC Power не равен `0`; батарейный режим не менять.
 
 ### Task 2: Изолированный пользователь и SSH
 
@@ -225,8 +228,8 @@ Expected: password attribute заблокирован значением `*`; п
 В сессии `ben`:
 
 ```bash
-/opt/homebrew/bin/brew install ldid xcbeautify
-/opt/homebrew/bin/brew list --versions ldid xcbeautify
+/opt/homebrew/bin/brew install ldid xcbeautify wget
+/opt/homebrew/bin/brew list --versions ldid xcbeautify wget
 ```
 
 Expected: обе formula установлены; runner не получает запись в `/opt/homebrew`.
@@ -236,7 +239,7 @@ Expected: обе formula установлены; runner не получает з
 ```bash
 ssh -i /Users/ben/.ssh/air_github_runner_sidestore_ed25519 \
   github-runner-sidestore@192.168.88.222 \
-  'for c in xcodebuild xcrun git python3 make bash zip unzip ldid xcbeautify; do command -v "$c" || exit 1; done'
+  'for c in xcodebuild xcrun git python3 make bash zip unzip ldid xcbeautify wget; do command -v "$c" || exit 1; done'
 ```
 
 Expected: все команды найдены без `sudo`.
@@ -473,14 +476,18 @@ xcode-version: "26.6"
 ```yaml
 - name: Install build dependencies
   if: runner.environment == 'github-hosted'
-  run: brew install ldid xcbeautify
+  run: brew install ldid xcbeautify wget
 
 - name: Verify build dependencies
   if: runner.environment == 'self-hosted'
   run: |
     command -v ldid
     command -v xcbeautify
+    command -v wget
 ```
+
+В simulator destinations `Makefile` заменить отсутствующий `OS=26.0` на
+`OS=latest`; `pr.yml` и `alpha.yml` при этом остаются GitHub-hosted.
 
 - [ ] **Step 3: Повторить structural check**
 
@@ -546,10 +553,13 @@ Expected: marketing version читается, build settings получены.
 ```bash
 cd "$smoke_root"
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
-  NSUnbufferedIO=YES make -B build
+  python3 scripts/ci/workflow.py build
 ```
 
-Expected: archive SideStore создан без обязательного code signing. Если сборка выявляет отсутствующий SDK/runtime/dependency, зафиксировать точную ошибку и не маршрутизировать workflow.
+Expected: archive SideStore, fake signing, IPA и dSYM созданы без signing
+secrets. Затем выполнить `tests-build`, отдельно `boot-sim-async` и только после
+него `tests-run`. Если сборка выявляет отсутствующий SDK/runtime/dependency,
+зафиксировать точную ошибку и не маршрутизировать workflow.
 
 - [ ] **Step 4: Проверить service и оба runner после нагрузки**
 

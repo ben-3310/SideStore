@@ -63,7 +63,7 @@ jobs:
         if: >
           steps.build_gate.outputs.should_skip != 'true' &&
           runner.environment == 'github-hosted'
-        run: brew install ldid xcbeautify
+        run: brew install ldid xcbeautify wget
 
       - name: Verify build dependencies
         if: >
@@ -72,6 +72,7 @@ jobs:
         run: |
           command -v ldid
           command -v xcbeautify
+          command -v wget
 
       # --------------------------------------------------
       # runtime env setup

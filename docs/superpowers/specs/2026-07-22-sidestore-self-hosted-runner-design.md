@@ -63,15 +63,20 @@ runner `china_link`, работающий под пользователем `ben
 - `xcodebuild`, `xcrun`, `simctl`, `git`, `python3`, `make`, `bash`, `zip`,
   `unzip`, `curl`;
 - рекурсивное извлечение Git submodules;
-- `ldid` и `xcbeautify` в `/opt/homebrew/bin`;
+- `ldid`, `xcbeautify` и `wget` в `/opt/homebrew/bin` (`wget` нужен
+  `Dependencies/em_proxy/fetch-prebuilt.sh`);
 - не менее 100 GiB свободного места после установки Xcode и runtime;
 - исходящее HTTPS-соединение с GitHub.
 
 Общий Homebrew остаётся под управлением `ben`/администратора. Runner получает
 доступ на выполнение уже установленных бинарников, но не право изменять
 `/opt/homebrew`. В доверенных self-hosted workflow шаг `brew install` заменяется
-проверкой наличия `ldid` и `xcbeautify`; для GitHub-hosted workflow существующее
-поведение сохраняется.
+проверкой наличия `ldid`, `xcbeautify` и `wget`; для GitHub-hosted workflow
+эти зависимости устанавливаются явным шагом.
+
+Чтобы сервис не становился `offline` во время простоя, на питании от адаптера
+системный sleep отключён (`pmset -c sleep 0`). Настройки экрана и батарейного
+режима не изменяются.
 
 ## GitHub Actions runner
 
@@ -127,9 +132,12 @@ runs-on: [self-hosted, macOS, ARM64, sidestore, xcode-26-6]
 ```
 
 Шаг подготовки зависимостей становится условно идемпотентным: на self-hosted
-runner он проверяет `ldid` и `xcbeautify`, а не изменяет Homebrew. Setup Xcode
+runner он проверяет `ldid`, `xcbeautify` и `wget`, а не изменяет Homebrew. Setup Xcode
 должен выбрать уже установленный Xcode 26.6 либо workflow задаёт
 `DEVELOPER_DIR` напрямую после проверки версии.
+
+Simulator destinations в `Makefile` используют `OS=latest`, чтобы Xcode выбрал
+установленный iOS 26.5 runtime вместо отсутствующего жёстко заданного 26.0.
 
 `pr.yml` сохраняет `runs-on: macos-26`. Это обязательный security boundary.
 
@@ -148,8 +156,9 @@ runner он проверяет `ldid` и `xcbeautify`, а не изменяет 
    labels.
 6. `launchd` запускает процесс под правильным UID и восстанавливает его после
    остановки процесса или перезагрузки сервиса.
-7. Локальный checkout с рекурсивными submodules проходит preflight и сборочный
-   smoke-test SideStore без signing secrets.
+7. Локальный checkout с рекурсивными submodules проходит preflight, archive,
+   fake signing, упаковку IPA/dSYM и build-for-testing без signing secrets;
+   iOS Simulator успешно загружается в headless-сессии.
 8. В service plist, process environment и журналах нет registration token,
    SSH-пароля или закрытого ключа.
 9. Существующий runner `china_link` остаётся `online` и работает под `ben`.
