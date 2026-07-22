@@ -1,5 +1,8 @@
+import re
 import unittest
+import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import Optional
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -7,6 +10,25 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 def source_text(relative_path: str) -> str:
     return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+
+
+def pbx_object(project: str, object_id: str) -> str:
+    match = re.search(
+        rf"^\t\t{re.escape(object_id)} .*? = \{{.*?^\t\t\}};$",
+        project,
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    if match is None:
+        raise AssertionError(f"PBX object {object_id} not found")
+    return match.group(0)
+
+
+def storyboard_element(relative_path: str, object_id: str) -> Optional[ET.Element]:
+    root = ET.parse(REPO_ROOT / relative_path).getroot()
+    return next(
+        (element for element in root.iter() if element.get("id") == object_id),
+        None,
+    )
 
 
 class AltSignCleanupTests(unittest.TestCase):
@@ -57,6 +79,84 @@ class OpenSSLModernizationTests(unittest.TestCase):
         ):
             with self.subTest(symbol=symbol):
                 self.assertNotIn(symbol, certificates_manager)
+
+
+class Xcode27ListedWarningsTests(unittest.TestCase):
+    def test_project_records_xcode_27_upgrade(self) -> None:
+        project = source_text("AltStore.xcodeproj/project.pbxproj")
+
+        self.assertIn("LastUpgradeCheck = 2700;", project)
+
+    def test_sidestore_has_no_obsolete_minimuxer_library_search_path(self) -> None:
+        project = source_text("AltStore.xcodeproj/project.pbxproj")
+        obsolete_path = (
+            '"$(PROJECT_DIR)/Dependencies/minimuxer/Sources/RustBridge/lib"'
+        )
+
+        for configuration_id in (
+            "BFD2477F2284B9A700981D42",
+            "BFD247802284B9A700981D42",
+        ):
+            with self.subTest(configuration=configuration_id):
+                self.assertNotIn(
+                    obsolete_path,
+                    pbx_object(project, configuration_id),
+                )
+
+    def test_sidestore_marks_embedded_openssl_as_runtime_needed(self) -> None:
+        project = source_text("AltStore.xcodeproj/project.pbxproj")
+        side_store_target = pbx_object(project, "BFD247692284B9A500981D42")
+        frameworks_phase = pbx_object(project, "BFD247672284B9A500981D42")
+        embed_frameworks_phase = pbx_object(project, "BF088D2B2501A087008082D9")
+
+        self.assertIn("A823DC542FF0D82100AD4DAF", frameworks_phase)
+        self.assertNotIn("A823DC542FF0D82100AD4DAF", embed_frameworks_phase)
+        self.assertIn("A823DC532FF0D82100AD4DAF", side_store_target)
+        self.assertIn("A823DC532FF0D82100AD4DAF", project)
+        self.assertIn("A82526E72FF0E1C000FB2EDD", project)
+        self.assertIn("A82526E62FF0E1C000FB2EDD", project)
+
+        for configuration_id in (
+            "BFD2477F2284B9A700981D42",
+            "BFD247802284B9A700981D42",
+        ):
+            with self.subTest(configuration=configuration_id):
+                configuration = pbx_object(project, configuration_id)
+                self.assertIn('"-needed_framework",', configuration)
+                self.assertIn("OpenSSL,", configuration)
+
+    def test_em_proxy_swift_only_suppresses_empty_object_warnings(self) -> None:
+        project = source_text("AltStore.xcodeproj/project.pbxproj")
+
+        for configuration_id in (
+            "A85A51462F4B4532002E2E11",
+            "A85A51472F4B4532002E2E11",
+        ):
+            with self.subTest(configuration=configuration_id):
+                configuration = pbx_object(project, configuration_id)
+                self.assertIn(
+                    'OTHER_LIBTOOLFLAGS = "-no_warning_for_no_symbols";',
+                    configuration,
+                )
+
+    def test_storyboards_use_supported_xcode_27_values(self) -> None:
+        settings = source_text("AltStore/Settings/Settings.storyboard")
+
+        self.assertIn('image="apple.terminal"', settings)
+        self.assertNotIn('image="terminal"', settings)
+        self.assertIsNone(
+            storyboard_element(
+                "AltStore/Sources/Sources.storyboard",
+                "W0l-zW-MjJ",
+            )
+        )
+
+        navigation_item = storyboard_element(
+            "AltStore/Base.lproj/Main.storyboard",
+            "FLf-DS-F77",
+        )
+        self.assertIsNotNone(navigation_item)
+        self.assertNotIn("style", navigation_item.attrib)
 
 
 class RoxasModernizationTests(unittest.TestCase):

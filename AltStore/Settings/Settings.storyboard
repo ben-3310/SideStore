@@ -2143,7 +2143,7 @@ Settings by i cons from the Noun Project</string>
                                 </connections>
                             </barButtonItem>
                             <barButtonItem title="console" id="1cD-4y-vTJ" userLabel="Console Log Button">
-                                <imageReference key="image" image="terminal" catalog="system" symbolScale="large"/>
+                                <imageReference key="image" image="apple.terminal" catalog="system" symbolScale="large"/>
                                 <connections>
                                     <action selector="showConsoleLogs:" destination="g8a-Rf-zWa" id="V0f-0y-C6C"/>
                                 </connections>
@@ -2227,7 +2227,7 @@ Settings by i cons from the Noun Project</string>
         <image name="Threads" width="130" height="130"/>
         <image name="Twitter" width="130" height="130"/>
         <image name="chevron.right" catalog="system" width="93" height="128"/>
-        <image name="terminal" catalog="system" width="128" height="97"/>
+        <image name="apple.terminal" catalog="system" width="128" height="97"/>
         <image name="trash" catalog="system" width="113" height="128"/>
         <namedColor name="SettingsBackground">
             <color red="0.45098039215686275" green="0.015686274509803921" blue="0.68627450980392157" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>

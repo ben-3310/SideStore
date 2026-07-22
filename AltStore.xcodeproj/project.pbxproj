@@ -598,7 +598,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1620;
-				LastUpgradeCheck = 1020;
+				LastUpgradeCheck = 2700;
 				ORGANIZATIONNAME = SideStore;
 				TargetAttributes = {
 					A8E2DB202D684CBD009E5D31 = {
@@ -855,6 +855,7 @@
 					"-ObjC",
 					"$(inherited)",
 				);
+				OTHER_LIBTOOLFLAGS = "-no_warning_for_no_symbols";
 				PRODUCT_MODULE_NAME = em_proxy;
 				PRODUCT_NAME = em_proxy_swift;
 				SKIP_INSTALL = NO;
@@ -885,6 +886,7 @@
 					"-ObjC",
 					"$(inherited)",
 				);
+				OTHER_LIBTOOLFLAGS = "-no_warning_for_no_symbols";
 				PRODUCT_MODULE_NAME = em_proxy;
 				PRODUCT_NAME = em_proxy_swift;
 				SKIP_INSTALL = NO;
@@ -1310,13 +1312,15 @@
 				);
 				LD_WARN_DUPLICATE_LIBRARIES = YES;
 				LD_WARN_UNUSED_DYLIBS = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Dependencies/minimuxer/Sources/RustBridge/lib",
-				);
 				LLVM_LTO = YES_THIN;
 				MARKETING_VERSION = "$(inherited)";
-				OTHER_LDFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-Xlinker",
+					"-needed_framework",
+					"-Xlinker",
+					OpenSSL,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1357,13 +1361,15 @@
 				);
 				LD_WARN_DUPLICATE_LIBRARIES = YES;
 				LD_WARN_UNUSED_DYLIBS = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Dependencies/minimuxer/Sources/RustBridge/lib",
-				);
 				LLVM_LTO = YES_THIN;
 				MARKETING_VERSION = "$(inherited)";
-				OTHER_LDFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-Xlinker",
+					"-needed_framework",
+					"-Xlinker",
+					OpenSSL,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

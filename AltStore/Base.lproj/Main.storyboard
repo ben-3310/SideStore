@@ -183,7 +183,7 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" largeTitleDisplayMode="never" id="maq-gT-QcS">
-                        <barButtonItem key="rightBarButtonItem" style="plain" id="FLf-DS-F77">
+                        <barButtonItem key="rightBarButtonItem" id="FLf-DS-F77">
                             <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" id="grk-xM-YWA" customClass="PillButton" customModule="SideStore" customModuleProvider="target">
                                 <rect key="frame" x="287" y="6.5" width="72" height="31"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
