@@ -118,6 +118,9 @@ stdout/stderr журналы в HOME runner и не получает права 
 - `~/Library/Caches/Homebrew`;
 - временных файлов runner.
 
+Созданные при регистрации `.credentials` и `.credentials_rsaparams` имеют
+режим `0600`; их содержимое не выводится при проверках.
+
 В профиле не размещаются GitHub token, Apple Account, signing certificates или
 другие секреты. Сборка проекта использует существующий режим без обязательного
 code signing.

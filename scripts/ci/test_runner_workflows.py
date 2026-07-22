@@ -41,14 +41,20 @@ class RunnerWorkflowTests(unittest.TestCase):
         )
         self_hosted_preflight = (
             "- name: Verify Xcode (self-hosted)",
-            "xcodebuild -version | grep -F 'Xcode 26.6'",
+            "xcodebuild -version | grep -Fx 'Xcode 26.6'",
         )
 
         for workflow_name in ("nightly.yml", "stable.yml"):
             text = workflow_text(workflow_name)
+            xcode_steps = text[
+                text.index("- name: Setup Xcode (GitHub-hosted)"):
+                text.index("- name: Restore Cache (exact)")
+            ]
             with self.subTest(workflow=workflow_name):
                 for fragment in hosted_setup + self_hosted_preflight:
-                    self.assertIn(fragment, text)
+                    self.assertIn(fragment, xcode_steps)
+                self.assertIn("runner.environment == 'github-hosted'", xcode_steps)
+                self.assertIn("runner.environment == 'self-hosted'", xcode_steps)
 
     def test_trusted_release_workflows_do_not_mutate_shared_homebrew(self) -> None:
         required_fragments = (

@@ -577,6 +577,7 @@ Expected: `air-sidestore` снова `online`/`idle`, `china_link` остаёт�
 ```text
 github-runner-sidestore not in admin
 HOME, .ssh, actions-runner, _work and caches are not group/world writable
+actions-runner/.credentials* are mode 0600
 runner process UID is github-runner-sidestore
 registration token is absent from plist, .env and logs
 pr.yml still uses macos-26

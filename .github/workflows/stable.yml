@@ -68,7 +68,7 @@ jobs:
         if: runner.environment == 'self-hosted'
         run: |
           test "$DEVELOPER_DIR" = "/Applications/Xcode.app/Contents/Developer"
-          xcodebuild -version | grep -F 'Xcode 26.6'
+          xcodebuild -version | grep -Fx 'Xcode 26.6'
 
       - name: Restore Cache (exact)
         id: xcode-cache-exact
