@@ -1,0 +1,6 @@
+self-hosted-runner:
+  labels:
+    - sidestore
+    - xcode-26-6
+    - xcode-27-0
+    - ios-27
