@@ -44,11 +44,6 @@
                BlueprintName = "UITests"
                ReferencedContainer = "container:AltStore.xcodeproj">
             </BuildableReference>
-            <SelectedTests>
-               <Test
-                  Identifier = "UITests/testExample()">
-               </Test>
-            </SelectedTests>
          </TestableReference>
       </Testables>
    </TestAction>

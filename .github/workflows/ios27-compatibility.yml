@@ -5,20 +5,24 @@ on:
     branches: [develop]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ios27-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   compatibility:
     runs-on: [self-hosted, macOS, ARM64, sidestore, xcode-27-0, ios-27]
     timeout-minutes: 90
     env:
-      SIMULATOR_DEVICE: "iPhone 13"
+      SIMULATOR_MODEL: "iPhone 13"
       SIMULATOR_OS: "27.0"
+      SIMULATOR_DEVICE: "SideStore-CI-${{ github.run_id }}-${{ github.run_attempt }}"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           submodules: recursive
           fetch-depth: 0
@@ -28,7 +32,7 @@ jobs:
           test "$DEVELOPER_DIR" = "/Applications/Xcode-beta.app/Contents/Developer"
           xcodebuild -version | grep -Fx 'Xcode 27.0'
           xcrun simctl list runtimes | grep -F "iOS 27.0 (27.0"
-          xcrun simctl list devicetypes | grep -F "iPhone 13"
+          xcrun simctl list devicetypes | grep -F "$SIMULATOR_MODEL"
           command -v ldid
           command -v xcbeautify
           command -v wget
@@ -38,72 +42,62 @@ jobs:
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
             -s scripts/ci -p 'test_*.py' -v
 
-      - name: Ensure iPhone 13 iOS 27 Simulator
+      - name: Create isolated iPhone 13 iOS 27 Simulator
         run: |
+          udid="$(
           python3 - <<'PY'
-          import json
           import os
           import subprocess
 
           runtime_id = "com.apple.CoreSimulator.SimRuntime.iOS-27-0"
           device_type = "com.apple.CoreSimulator.SimDeviceType.iPhone-13"
-          devices = json.loads(
-              subprocess.check_output(["xcrun", "simctl", "list", "devices", "-j"])
-          )["devices"].get(runtime_id, [])
-          udid = next(
-              (
-                  device["udid"]
-                  for device in devices
-                  if device["name"] == os.environ["SIMULATOR_DEVICE"]
-                  and device["isAvailable"]
-              ),
-              None,
-          )
-          if udid is None:
-              udid = subprocess.check_output(
-                  [
-                      "xcrun",
-                      "simctl",
-                      "create",
-                      os.environ["SIMULATOR_DEVICE"],
-                      device_type,
-                      runtime_id,
-                  ],
-                  text=True,
-              ).strip()
-          print(f"IOS27_SIMULATOR_READY {runtime_id} {udid}")
+          udid = subprocess.check_output(
+              [
+                  "xcrun",
+                  "simctl",
+                  "create",
+                  os.environ["SIMULATOR_DEVICE"],
+                  device_type,
+                  runtime_id,
+              ],
+              text=True,
+          ).strip()
+          print(udid)
           PY
+          )"
+          test -n "$udid"
+          echo "IOS27_SIMULATOR_UDID=$udid" >> "$GITHUB_ENV"
+          echo "SIMULATOR_DESTINATION=platform=iOS Simulator,id=$udid" >> "$GITHUB_ENV"
+          echo "Created $SIMULATOR_MODEL / iOS $SIMULATOR_OS as $SIMULATOR_DEVICE ($udid)"
 
       - name: Archive compatibility build
         run: python3 scripts/ci/workflow.py build
 
-      - name: Build for iOS 27 Simulator
+      - name: Build UITests for iOS 27 Simulator
         run: python3 scripts/ci/workflow.py tests-build
 
       - name: Boot iOS 27 Simulator
         run: |
-          python3 - <<'PY'
-          import json
-          import os
-          import subprocess
+          xcrun simctl boot "$IOS27_SIMULATOR_UDID"
+          xcrun simctl bootstatus "$IOS27_SIMULATOR_UDID" -b
 
-          runtime_id = "com.apple.CoreSimulator.SimRuntime.iOS-27-0"
-          devices = json.loads(
-              subprocess.check_output(["xcrun", "simctl", "list", "devices", "-j"])
-          )["devices"][runtime_id]
-          udid = next(
-              device["udid"]
-              for device in devices
-              if device["name"] == os.environ["SIMULATOR_DEVICE"]
-              and device["isAvailable"]
-          )
+      - name: Run deterministic launch smoke
+        run: python3 scripts/ci/workflow.py tests-run "$IOS27_SIMULATOR_UDID"
 
-          try:
-              subprocess.run(["xcrun", "simctl", "boot", udid], check=False)
-              subprocess.run(
-                  ["xcrun", "simctl", "bootstatus", udid, "-b"],
-                  check=True,
-              )
-          finally:
-              subprocess.run(["xcrun", "simctl", "shutdown", udid], check=False)
-          PY
+      - name: Upload XCTest result
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ios27-xcresult-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/tests/test-results.xcresult
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Delete isolated Simulator
+        if: always()
+        run: |
+          if [ -z "${IOS27_SIMULATOR_UDID:-}" ]; then
+            exit 0
+          fi
+          xcrun simctl shutdown "$IOS27_SIMULATOR_UDID" || true
+          xcrun simctl delete "$IOS27_SIMULATOR_UDID"

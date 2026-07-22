@@ -1,5 +1,6 @@
 import unittest
 from pathlib import Path
+import re
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -41,8 +42,13 @@ class RunnerWorkflowTests(unittest.TestCase):
             "[self-hosted, macOS, ARM64, sidestore, xcode-27-0, ios-27]",
         )
         self.assertNotIn("pull_request:", text)
+        self.assertIn("permissions:\n  contents: read", text)
         self.assertIn('SIMULATOR_OS: "27.0"', text)
-        self.assertIn('SIMULATOR_DEVICE: "iPhone 13"', text)
+        self.assertIn('SIMULATOR_MODEL: "iPhone 13"', text)
+        self.assertIn(
+            'SIMULATOR_DEVICE: "SideStore-CI-${{ github.run_id }}-${{ github.run_attempt }}"',
+            text,
+        )
         self.assertIn("xcodebuild -version | grep -Fx 'Xcode 27.0'", text)
         self.assertIn('grep -F "iOS 27.0 (27.0', text)
         self.assertIn(
@@ -52,9 +58,40 @@ class RunnerWorkflowTests(unittest.TestCase):
         self.assertIn("python3 scripts/ci/workflow.py build", text)
         self.assertIn("python3 scripts/ci/workflow.py tests-build", text)
         self.assertIn(
+            'python3 scripts/ci/workflow.py tests-run "$IOS27_SIMULATOR_UDID"',
+            text,
+        )
+        self.assertIn(
             'runtime_id = "com.apple.CoreSimulator.SimRuntime.iOS-27-0"',
             text,
         )
+        self.assertIn(
+            'echo "IOS27_SIMULATOR_UDID=$udid" >> "$GITHUB_ENV"',
+            text,
+        )
+        self.assertIn(
+            'echo "SIMULATOR_DESTINATION=platform=iOS Simulator,id=$udid" >> "$GITHUB_ENV"',
+            text,
+        )
+        self.assertIn("xcrun simctl boot \"$IOS27_SIMULATOR_UDID\"", text)
+        self.assertIn("xcrun simctl bootstatus \"$IOS27_SIMULATOR_UDID\" -b", text)
+        self.assertIn("path: build/tests/test-results.xcresult", text)
+        self.assertIn("if-no-files-found: error", text)
+        self.assertNotIn("if-no-files-found: warn", text)
+        self.assertIn("if: always()", text)
+        self.assertIn("xcrun simctl shutdown \"$IOS27_SIMULATOR_UDID\"", text)
+        self.assertIn("xcrun simctl delete \"$IOS27_SIMULATOR_UDID\"", text)
+        self.assertIn(
+            "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1",
+            text,
+        )
+        self.assertIn(
+            "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2",
+            text,
+        )
+        for action in re.findall(r"uses:\s+([^\s#]+)", text):
+            with self.subTest(action=action):
+                self.assertRegex(action, r"^[^@]+@[0-9a-f]{40}$")
         self.assertNotIn("upload-release", text)
         self.assertNotIn("CROSS_REPO_PUSH_KEY", text)
 
@@ -104,10 +141,13 @@ class RunnerWorkflowTests(unittest.TestCase):
 
         self.assertIn("SIMULATOR_DEVICE ?= iPhone 17 Pro", makefile)
         self.assertIn("SIMULATOR_OS ?= latest", makefile)
+        self.assertIn(
+            "SIMULATOR_DESTINATION ?= platform=iOS Simulator,name=$(SIMULATOR_DEVICE),OS=$(SIMULATOR_OS)",
+            makefile,
+        )
         self.assertNotIn("OS=26.0", makefile)
         self.assertNotIn("OS=latest", makefile)
-        self.assertEqual(makefile.count("OS=$(SIMULATOR_OS)"), 3)
-        self.assertEqual(makefile.count("name=$(SIMULATOR_DEVICE)"), 3)
+        self.assertEqual(makefile.count("-destination '$(SIMULATOR_DESTINATION)'"), 3)
 
 
 if __name__ == "__main__":

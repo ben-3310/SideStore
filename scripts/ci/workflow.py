@@ -146,8 +146,8 @@ def build():
         "NSUnbufferedIO=YES make -B build "
         "2>&1 | tee -a build/logs/build.log | xcbeautify --renderer github-actions"
     )
-    run("make fakesign | tee -a build/logs/build.log")
-    run("make ipa | tee -a build/logs/build.log")
+    run("set -o pipefail && make fakesign | tee -a build/logs/build.log")
+    run("set -o pipefail && make ipa | tee -a build/logs/build.log")
     run("zip -r -9 ./SideStore.dSYMs.zip ./SideStore.xcarchive/dSYMs")
 
 # ----------------------------------------------------------
@@ -157,6 +157,7 @@ def build():
 def tests_build():
     run("mkdir -p build/logs")
     run(
+        "set -o pipefail && "
         "NSUnbufferedIO=YES make -B build-tests "
         "2>&1 | tee -a build/logs/tests-build.log | xcbeautify --renderer github-actions"
     )
@@ -165,34 +166,51 @@ def tests_build():
 # TESTS RUN
 # ----------------------------------------------------------
 
-def is_sim_booted(model):
-    out = runAndGet(f'xcrun simctl list devices "{model}"')
-    return "Booted" in out
+def is_sim_booted(identifier):
+    cmd = ["xcrun", "simctl", "list", "devices", "--json"]
+    print(f"$ {' '.join(cmd)}", flush=True, file=sys.stderr)
+    result = subprocess.run(
+        cmd,
+        cwd=ROOT,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=sys.stderr,
+        text=True,
+    )
+    print("", flush=True, file=sys.stderr)
 
-def boot_sim_async(model):
+    devices_by_runtime = json.loads(result.stdout).get("devices", {})
+    return any(
+        device.get("state") == "Booted"
+        and identifier in (device.get("udid"), device.get("name"))
+        for devices in devices_by_runtime.values()
+        for device in devices
+    )
+
+def boot_sim_async(identifier):
     log = ROOT / "build/logs/tests-run.log"
     log.parent.mkdir(parents=True, exist_ok=True)
 
-    if is_sim_booted(model):
-        run(f'echo "Simulator {model} already booted." | tee -a {log}')
+    if is_sim_booted(identifier):
+        run(f'echo "Simulator {identifier} already booted." | tee -a {log}')
         return
 
-    run(f'echo "Booting simulator {model} asynchronously..." | tee -a {log}')
+    run(f'echo "Booting simulator {identifier} asynchronously..." | tee -a {log}')
 
     with open(log, "a") as f:
         subprocess.Popen(
-            ["xcrun", "simctl", "boot", model],
+            ["xcrun", "simctl", "boot", identifier],
             cwd=ROOT,
             stdout=f,
             stderr=subprocess.STDOUT,
             start_new_session=True,
         )
 
-def boot_sim_sync(model):
+def boot_sim_sync(identifier):
     run("mkdir -p build/logs")
 
     for i in range(1, 7):
-        if is_sim_booted(model):
+        if is_sim_booted(identifier):
             run('echo "Simulator booted." | tee -a build/logs/tests-run.log')
             return
 
@@ -201,13 +219,13 @@ def boot_sim_sync(model):
 
     raise SystemExit("Simulator failed to boot")
 
-def tests_run(model):
+def tests_run(identifier):
     run("mkdir -p build/logs")
 
-    if not is_sim_booted(model):
-        boot_sim_sync(model)
+    if not is_sim_booted(identifier):
+        boot_sim_sync(identifier)
 
-    run("make run-tests 2>&1 | tee -a build/logs/tests-run.log")
+    run("set -o pipefail && make run-tests 2>&1 | tee -a build/logs/tests-run.log")
     run("zip -r -9 ./test-results.zip ./build/tests")
 
 # ----------------------------------------------------------
@@ -510,7 +528,7 @@ COMMANDS = {
     # TESTS
     # ----------------------------------------------------------
     "tests-build"             : (tests_build,               0, ""),
-    "tests-run"               : (tests_run,                 1, "<model>"),
+    "tests-run"               : (tests_run,                 1, "<simulator-name-or-udid>"),
     "boot-sim-async"          : (boot_sim_async,            1, "<model>"),
     "boot-sim-sync"           : (boot_sim_sync,             1, "<model>"),
 
