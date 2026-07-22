@@ -36,10 +36,18 @@ class AltSignCleanupTests(unittest.TestCase):
 
 
 class OpenSSLModernizationTests(unittest.TestCase):
-    def test_csr_generation_uses_legacy_rsa_symbols_baseline(self) -> None:
+    def test_csr_generation_uses_evp_keygen_without_legacy_rsa_symbols(self) -> None:
         certificates_manager = source_text(
             "Dependencies/AltSign/SwiftBridge/CertificatesManager.swift"
         )
+
+        for symbol in (
+            "EVP_PKEY_CTX_new_id",
+            "EVP_PKEY_keygen_init",
+            "EVP_PKEY_keygen",
+        ):
+            with self.subTest(symbol=symbol):
+                self.assertIn(symbol, certificates_manager)
 
         for symbol in (
             "RSA_new",
@@ -48,7 +56,7 @@ class OpenSSLModernizationTests(unittest.TestCase):
             "EVP_PKEY_set1_RSA",
         ):
             with self.subTest(symbol=symbol):
-                self.assertIn(symbol, certificates_manager)
+                self.assertNotIn(symbol, certificates_manager)
 
 
 class RoxasModernizationTests(unittest.TestCase):
