@@ -4,7 +4,7 @@
 
 **Goal:** Зарегистрировать текущий Mac как изолированный SideStore compatibility runner с Xcode 27.0 и гарантированным Simulator destination iOS 27.0.
 
-**Architecture:** Release workflow остаются привязаны к `air-sidestore`/Xcode 26.6. Новый `denys-mbp-sidestore` работает под отдельным стандартным пользователем и обслуживает только отдельный доверенный compatibility workflow с точными labels `xcode-27-0` и `ios-27`; simulator version передаётся через `SIMULATOR_OS=27.0`.
+**Architecture:** Release workflow остаются привязаны к `air-sidestore`/Xcode 26.6. Новый `denys-mbp-sidestore` работает под отдельным стандартным пользователем и обслуживает только отдельный доверенный compatibility workflow с точными labels `xcode-27-0` и `ios-27`; destination передаётся через `SIMULATOR_DEVICE=iPhone 13` и `SIMULATOR_OS=27.0`.
 
 **Tech Stack:** macOS 27, Xcode-beta 27.0, iOS 27.0 Simulator, GitHub Actions runner 2.336.0 ARM64, launchd, Homebrew, Python unittest, YAML workflows.
 
@@ -14,7 +14,8 @@
 - Не добавлять `github-runner-sidestore` в `admin`, `sudo` или `com.apple.access_ssh`.
 - Не давать compatibility workflow deploy/signing secrets и не запускать его на `pull_request`.
 - Не изменять routing `nightly.yml` и `stable.yml` с `air-sidestore`/`xcode-26-6`.
-- Использовать `SIMULATOR_OS=27.0` для simulator build на новом runner.
+- Использовать `SIMULATOR_DEVICE=iPhone 13` и `SIMULATOR_OS=27.0` для
+  simulator build на новом runner.
 - Не объявлять удалённые `UITests` зелёными; acceptance ограничен archive, build-for-testing и boot iOS 27.0.
 - Не выводить registration token, пароль, credential contents или private keys.
 - Не затрагивать пользовательские `.build`, IPA и dSYM в основном checkout.
@@ -59,8 +60,9 @@ Expected: новый worktree на `codex/sidestore-ios27-runner`, основн�
 - Modify/Test: `scripts/ci/test_runner_workflows.py`
 
 **Interfaces:**
-- Consumes: env `SIMULATOR_OS`, default `latest`.
-- Produces: все три simulator targets используют `OS=$(SIMULATOR_OS)`.
+- Consumes: env `SIMULATOR_DEVICE` и `SIMULATOR_OS`, defaults `iPhone 17 Pro`
+  и `latest`.
+- Produces: все три simulator targets используют заданные model и OS.
 
 - [ ] **Step 1: Написать failing regression test**
 
@@ -70,10 +72,12 @@ Expected: новый worktree на `codex/sidestore-ios27-runner`, основн�
 def test_simulator_destination_can_be_pinned_by_runner(self) -> None:
     makefile = (REPO_ROOT / "Makefile").read_text()
 
+    self.assertIn("SIMULATOR_DEVICE ?= iPhone 17 Pro", makefile)
     self.assertIn("SIMULATOR_OS ?= latest", makefile)
     self.assertNotIn("OS=26.0", makefile)
     self.assertNotIn("OS=latest", makefile)
     self.assertEqual(makefile.count("OS=$(SIMULATOR_OS)"), 3)
+    self.assertEqual(makefile.count("name=$(SIMULATOR_DEVICE)"), 3)
 ```
 
 - [ ] **Step 2: Подтвердить RED**
@@ -91,12 +95,13 @@ Expected: FAIL, потому что `SIMULATOR_OS ?= latest` отсутству�
 
 ```make
 SIMULATOR_OS ?= latest
+SIMULATOR_DEVICE ?= iPhone 17 Pro
 ```
 
 В `build-and-test`, `build-tests`, `run-tests` заменить destination на:
 
 ```make
--destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=$(SIMULATOR_OS)'
+-destination 'platform=iOS Simulator,name=$(SIMULATOR_DEVICE),OS=$(SIMULATOR_OS)'
 ```
 
 - [ ] **Step 4: Подтвердить GREEN и полный suite**
@@ -121,7 +126,8 @@ git commit -m 'ci: allow runners to pin simulator runtime'
 - Modify/Test: `scripts/ci/test_runner_workflows.py`
 
 **Interfaces:**
-- Consumes: labels `sidestore,xcode-27-0,ios-27`, env `SIMULATOR_OS=27.0`.
+- Consumes: labels `sidestore,xcode-27-0,ios-27`, env
+  `SIMULATOR_DEVICE=iPhone 13`, `SIMULATOR_OS=27.0`.
 - Produces: compile/archive/build-for-testing/boot gate без release/deploy действий.
 
 - [ ] **Step 1: Написать failing workflow contract test**
@@ -137,6 +143,7 @@ def test_ios27_compatibility_workflow_is_trusted_and_pinned(self) -> None:
         "[self-hosted, macOS, ARM64, sidestore, xcode-27-0, ios-27]",
     )
     self.assertNotIn("pull_request:", text)
+    self.assertIn('SIMULATOR_DEVICE: "iPhone 13"', text)
     self.assertIn('SIMULATOR_OS: "27.0"', text)
     self.assertIn("xcodebuild -version | grep -Fx 'Xcode 27.0'", text)
     self.assertIn('grep -F "iOS 27.0 (27.0', text)
@@ -177,6 +184,7 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64, sidestore, xcode-27-0, ios-27]
     timeout-minutes: 90
     env:
+      SIMULATOR_DEVICE: "iPhone 13"
       SIMULATOR_OS: "27.0"
 
     steps:
@@ -218,7 +226,8 @@ jobs:
           udid = next(
               device["udid"]
               for device in devices
-              if device["name"] == "iPhone 17 Pro" and device["isAvailable"]
+              if device["name"] == os.environ["SIMULATOR_DEVICE"]
+              and device["isAvailable"]
           )
           subprocess.run(["xcrun", "simctl", "boot", udid], check=False)
           subprocess.run(["xcrun", "simctl", "bootstatus", udid, "-b"], check=True)
@@ -261,6 +270,7 @@ git commit -m 'ci: add trusted iOS 27 compatibility lane'
 ```bash
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/usr/sbin:/sbin"
 export DEVELOPER_DIR="/Applications/Xcode-beta.app/Contents/Developer"
+export SIMULATOR_DEVICE="iPhone 13"
 export SIMULATOR_OS="27.0"
 umask 077
 ```
@@ -270,6 +280,7 @@ umask 077
 ```text
 PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/usr/sbin:/sbin
 DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer
+SIMULATOR_DEVICE=iPhone 13
 SIMULATOR_OS=27.0
 HOME=/Users/github-runner-sidestore
 ```
@@ -288,6 +299,7 @@ Expected: files owner `github-runner-sidestore:staff`, mode `0600`.
 sudo -u github-runner-sidestore -H env \
   PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/usr/sbin:/sbin \
   DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer \
+  SIMULATOR_DEVICE="iPhone 13" \
   SIMULATOR_OS=27.0 \
   /bin/zsh -c 'id; xcodebuild -version; xcrun simctl list runtimes; command -v ldid xcbeautify wget'
 ```
@@ -313,6 +325,7 @@ registration_token=$(gh api --method POST \
 sudo -u github-runner-sidestore -H env \
   PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/usr/sbin:/sbin \
   DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer \
+  SIMULATOR_DEVICE="iPhone 13" \
   SIMULATOR_OS=27.0 \
   /Users/github-runner-sidestore/actions-runner/config.sh \
   --unattended \
@@ -359,6 +372,7 @@ Plist должен содержать:
     <key>HOME</key><string>/Users/github-runner-sidestore</string>
     <key>PATH</key><string>/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     <key>DEVELOPER_DIR</key><string>/Applications/Xcode-beta.app/Contents/Developer</string>
+    <key>SIMULATOR_DEVICE</key><string>iPhone 13</string>
     <key>SIMULATOR_OS</key><string>27.0</string>
   </dict>
   <key>RunAtLoad</key><true/>
@@ -420,6 +434,7 @@ sudo -u github-runner-sidestore -H git -C \
 sudo -u github-runner-sidestore -H env \
   PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/usr/sbin:/sbin \
   DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer \
+  SIMULATOR_DEVICE="iPhone 13" \
   SIMULATOR_OS=27.0 \
   /bin/zsh -c 'cd ~/smoke/SideStore && PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/ci -p "test_*.py" -v'
 ```
@@ -440,7 +455,8 @@ Expected: `Archive Succeeded`, `SideStore.ipa` и `SideStore.dSYMs.zip` суще
 python3 scripts/ci/workflow.py tests-build
 ```
 
-Затем выбрать `iPhone 17 Pro` строго из runtime
+При отсутствии создать `iPhone 13` с device type
+`com.apple.CoreSimulator.SimDeviceType.iPhone-13`, затем выбрать его строго из runtime
 `com.apple.CoreSimulator.SimRuntime.iOS-27-0`, выполнить `simctl bootstatus -b`
 и shutdown.
 

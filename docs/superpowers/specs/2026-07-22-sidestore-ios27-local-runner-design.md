@@ -15,7 +15,8 @@ production/deploy secrets.
   `/Applications/Xcode-beta.app/Contents/Developer`;
 - Xcode 27.0, build `27A5194q`;
 - iOS 27.0 SDK и Simulator runtime `24A5355p`;
-- модель Simulator `iPhone 17 Pro` доступна для iOS 27.0;
+- device type Simulator `iPhone 13` поддерживается Xcode 27 и создаётся для
+  runtime iOS 27.0, потому что Xcode не создаёт его автоматически;
 - Homebrew build tools `ldid`, `xcbeautify` и `wget` уже установлены;
 - официальный GitHub Actions runner 2.336.0 для macOS ARM64, SHA-256
   `8e8839c49b7060b6b2154f4931f815df330c27f167d53ef2239ee3dfce28b079`.
@@ -42,6 +43,7 @@ Runner использует существующий `Xcode-beta.app` через
 ```text
 PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/usr/sbin:/sbin
 DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer
+SIMULATOR_DEVICE=iPhone 13
 SIMULATOR_OS=27.0
 ```
 
@@ -86,9 +88,10 @@ Service использует `RunAtLoad`, `KeepAlive`, `ProcessType=Interactive`
   `[self-hosted, macOS, ARM64, sidestore, xcode-27-0, ios-27]`;
 - не запускается на `pull_request`;
 - не получает deploy/signing secrets и не публикует release;
-- проверяет Xcode 27.0, `SIMULATOR_OS=27.0`, iOS 27.0 runtime и build tools;
+- проверяет Xcode 27.0, `SIMULATOR_DEVICE=iPhone 13`, `SIMULATOR_OS=27.0`,
+  iOS 27.0 runtime и build tools;
 - выполняет repository regression checks, archive без signing, simulator
-  build-for-testing и headless boot `iPhone 17 Pro` на iOS 27.0;
+  build-for-testing и headless boot `iPhone 13` на iOS 27.0;
 - загружает только диагностические build logs, если workflow будет опубликован.
 
 Изменения workflow остаются локальным candidate до отдельного разрешения на
