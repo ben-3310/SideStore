@@ -93,3 +93,6 @@ Dependencies/idevice/
 .asc/config.json
 .asc/skills-check.json
 .asc/*.lock*
+.asc/artifacts/
+.asc/runs/
+!ASC.md
