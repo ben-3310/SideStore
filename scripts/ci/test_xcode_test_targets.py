@@ -101,6 +101,21 @@ class XcodeTestTargetTests(unittest.TestCase):
                     config,
                 )
 
+    def test_ui_test_target_does_not_inherit_application_entitlements(self) -> None:
+        config_path = REPO_ROOT / "xcconfigs" / "UITests.xcconfig"
+        config = config_path.read_text()
+        entitlement_lines = [
+            line.strip()
+            for line in config.splitlines()
+            if line.strip().startswith("CODE_SIGN_ENTITLEMENTS")
+        ]
+
+        self.assertEqual(entitlement_lines, ["CODE_SIGN_ENTITLEMENTS ="])
+        self.assertGreater(
+            config.index("CODE_SIGN_ENTITLEMENTS ="),
+            config.index('#include "../Build.xcconfig"'),
+        )
+
     def test_ci_plan_runs_only_deterministic_launch_smoke(self) -> None:
         plan_path = REPO_ROOT / "SideStore" / "Tests" / "SideStoreTests.xctestplan"
         plan = json.loads(plan_path.read_text())

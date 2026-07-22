@@ -167,14 +167,14 @@ open class RSTFetchedResultsDataSource<ContentType: NSManagedObject, CellType: U
     }
 
     public func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        if let window = contentView?.window, window != nil {
+        if contentView?.window != nil {
             (contentView as? RSTCellContentTransactionUpdateable)?.beginUpdates()
         }
     }
 
     public func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         refreshItemCount()
-        if let window = contentView?.window, window != nil {
+        if contentView?.window != nil {
             (contentView as? RSTCellContentTransactionUpdateable)?.endUpdates()
         } else {
             (contentView as? UITableView)?.reloadData()
@@ -356,7 +356,7 @@ open class RSTFetchedResultsCollectionViewPrefetchingDataSource<ContentType: NSM
                 self.prefetchItemCache.setObject(content as AnyObject, forKey: item as AnyObject)
             }
             DispatchQueue.main.async {
-                if let collectionView = self.contentView as? UICollectionView,
+                if let collectionView = self.contentView,
                    let cellIndexPath = collectionView.indexPath(for: cell) {
                     let localIndexPath = self.localIndexPath(for: cellIndexPath) ?? cellIndexPath
                     if self.isValidIndexPath(localIndexPath) {
@@ -425,7 +425,7 @@ open class RSTFetchedResultsTableViewPrefetchingDataSource<ContentType: NSManage
                 self.prefetchItemCache.setObject(content as AnyObject, forKey: item as AnyObject)
             }
             DispatchQueue.main.async {
-                if let tableView = self.contentView as? UITableView,
+                if let tableView = self.contentView,
                    let cellIndexPath = tableView.indexPath(for: cell) {
                     let localIndexPath = self.localIndexPath(for: cellIndexPath) ?? cellIndexPath
                     if self.isValidIndexPath(localIndexPath) {

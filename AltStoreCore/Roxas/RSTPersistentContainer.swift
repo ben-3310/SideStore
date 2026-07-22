@@ -8,7 +8,7 @@
 import CoreData
 
 @objc(RSTPersistentContainer)
-public class RSTPersistentContainer: NSPersistentContainer {
+public class RSTPersistentContainer: NSPersistentContainer, @unchecked Sendable {
     @objc open var isMigrationRequired: Bool {
         for description in self.persistentStoreDescriptions {
             guard let url = description.url,
