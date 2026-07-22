@@ -74,11 +74,13 @@ class RunnerWorkflowTests(unittest.TestCase):
                 for fragment in required_fragments:
                     self.assertIn(fragment, text)
 
-    def test_simulator_destination_uses_installed_runtime(self) -> None:
+    def test_simulator_destination_can_be_pinned_by_runner(self) -> None:
         makefile = (REPO_ROOT / "Makefile").read_text()
 
+        self.assertIn("SIMULATOR_OS ?= latest", makefile)
         self.assertNotIn("OS=26.0", makefile)
-        self.assertEqual(makefile.count("OS=latest"), 3)
+        self.assertNotIn("OS=latest", makefile)
+        self.assertEqual(makefile.count("OS=$(SIMULATOR_OS)"), 3)
 
 
 if __name__ == "__main__":
