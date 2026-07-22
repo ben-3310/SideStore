@@ -35,7 +35,12 @@ def verify_dependencies(root: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, required=True, help="repository root")
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=Path(__file__).resolve().parents[2],
+        help="repository root (defaults to the repository containing this script)",
+    )
     arguments = parser.parse_args()
 
     try:

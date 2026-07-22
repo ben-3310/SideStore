@@ -1,4 +1,7 @@
 from pathlib import Path
+import shutil
+import subprocess
+import sys
 from tempfile import TemporaryDirectory
 import unittest
 
@@ -55,6 +58,38 @@ class DependencyLayoutTests(unittest.TestCase):
         (root / "Dependencies").symlink_to(Path("../SideStore_Dependencies"), target_is_directory=True)
 
         verify_dependencies(root)
+
+    def test_documented_command_uses_its_repository_root_by_default(self) -> None:
+        root = self.tmpdir / "SideStore"
+        script_directory = root / "scripts" / "ci"
+        script_directory.mkdir(parents=True)
+        shutil.copy2(Path(__file__).with_name("dependencies.py"), script_directory)
+        make_dependencies(root / "Dependencies")
+
+        result = subprocess.run(
+            [sys.executable, "scripts/ci/dependencies.py"],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Dependencies verified at", result.stdout)
+
+    def test_command_accepts_an_explicit_repository_root(self) -> None:
+        root = make_root_with_dependencies(self.tmpdir)
+        script = Path(__file__).with_name("dependencies.py")
+
+        result = subprocess.run(
+            [sys.executable, script, "--root", root],
+            cwd=self.tmpdir,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_rejects_absolute_symlink_to_external_directory(self) -> None:
         external = make_dependencies(self.tmpdir / "SideStore_Dependencies")

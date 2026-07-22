@@ -34,15 +34,37 @@ This guide assumes you:
     [this guide](https://docs.github.com/en/desktop/contributing-and-collaborating-using-github-desktop/adding-and-cloning-repositories/cloning-and-forking-repositories-from-github-desktop).
 
     For local development, you may keep `Dependencies` beside this checkout and
-    replace it with a relative link. Do not run `mv` below if the existing
-    `Dependencies` directory contains uncommitted work. CI and ordinary
-    recursive clones may retain their normal `Dependencies` directory.
+    replace it with a relative link. CI and ordinary recursive clones may retain
+    their normal `Dependencies` directory.
+
+    **New external location.** Use these commands only when
+    `../SideStore_Dependencies` does not already exist. The check aborts rather
+    than risking a move into an existing directory:
 
     ```zsh
+    if [ -e ../SideStore_Dependencies ] || [ -L ../SideStore_Dependencies ]; then
+      echo "Aborting: ../SideStore_Dependencies already exists; do not move Dependencies."
+      exit 1
+    fi
     mv Dependencies ../SideStore_Dependencies
     ln -s ../SideStore_Dependencies Dependencies
     python3 scripts/ci/dependencies.py
     ```
+
+    **Existing external checkout.** Do not run `mv`. First inspect the current
+    entry and confirm that it is a symlink before replacing it:
+
+    ```zsh
+    ls -ld Dependencies
+    readlink Dependencies
+    # Continue only after confirming that Dependencies is a symlink.
+    rm Dependencies && ln -s ../SideStore_Dependencies Dependencies
+    python3 scripts/ci/dependencies.py
+    ```
+
+    If `Dependencies` is a regular directory while an external checkout already
+    exists, reconcile the two directories manually. Do not move it
+    automatically.
 
 3. Copy `CodeSigning.xcconfig.sample` to `CodeSigning.xcconfig` and fill in the values.
 4. **(Development only)** Change the value for `ALTDeviceID` in the Info.plist to your device's UDID. Normally, SideServer embeds the device's UDID in SideStore's Info.plist during installation. When
