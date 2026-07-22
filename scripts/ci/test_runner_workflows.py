@@ -58,7 +58,7 @@ class RunnerWorkflowTests(unittest.TestCase):
         self.assertIn("python3 scripts/ci/workflow.py build", text)
         self.assertIn("python3 scripts/ci/workflow.py tests-build", text)
         self.assertIn(
-            'python3 scripts/ci/workflow.py tests-run "$SIMULATOR_DEVICE"',
+            'python3 scripts/ci/workflow.py tests-run "$IOS27_SIMULATOR_UDID"',
             text,
         )
         self.assertIn(

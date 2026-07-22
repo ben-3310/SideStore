@@ -1,4 +1,6 @@
 import importlib.util
+import json
+import subprocess
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -46,6 +48,58 @@ class WorkflowPipelineTests(unittest.TestCase):
             if "make run-tests" in call.args[0]
         )
         self.assertTrue(test_command.startswith("set -o pipefail && "))
+
+    def test_simulator_boot_check_matches_exact_udid(self) -> None:
+        simulator_udid = "3CF1D2BE-6147-4A62-88DB-1D6997B38884"
+        completed = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "devices": {
+                        "com.apple.CoreSimulator.SimRuntime.iOS-27-0": [
+                            {
+                                "name": "SideStore-CI-test",
+                                "udid": simulator_udid,
+                                "state": "Booted",
+                                "isAvailable": True,
+                            }
+                        ]
+                    }
+                }
+            ),
+        )
+
+        with patch.object(self.workflow.subprocess, "run", return_value=completed):
+            self.assertTrue(self.workflow.is_sim_booted(simulator_udid))
+            self.assertTrue(self.workflow.is_sim_booted("SideStore-CI-test"))
+
+    def test_simulator_boot_check_rejects_other_udid(self) -> None:
+        completed = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "devices": {
+                        "com.apple.CoreSimulator.SimRuntime.iOS-27-0": [
+                            {
+                                "name": "SideStore-CI-test",
+                                "udid": "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
+                                "state": "Booted",
+                                "isAvailable": True,
+                            }
+                        ]
+                    }
+                }
+            ),
+        )
+
+        with patch.object(self.workflow.subprocess, "run", return_value=completed):
+            self.assertFalse(
+                self.workflow.is_sim_booted(
+                    "3CF1D2BE-6147-4A62-88DB-1D6997B38884"
+                )
+            )
 
 
 if __name__ == "__main__":

@@ -82,7 +82,7 @@ jobs:
           xcrun simctl bootstatus "$IOS27_SIMULATOR_UDID" -b
 
       - name: Run deterministic launch smoke
-        run: python3 scripts/ci/workflow.py tests-run "$SIMULATOR_DEVICE"
+        run: python3 scripts/ci/workflow.py tests-run "$IOS27_SIMULATOR_UDID"
 
       - name: Upload XCTest result
         if: always()
