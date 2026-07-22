@@ -45,6 +45,8 @@ runner `china_link`, работающий под пользователем `ben
 - членство только в группах, необходимых для SSH и developer tools;
 - отдельные каталоги runner, `_work`, Xcode/SwiftPM и инструментальных кэшей;
 - отсутствие доступа на запись к профилю, runner и кэшам пользователя `ben`.
+- точечный deny ACL на `/Users/ben` для `github-runner-sidestore`, поскольку
+  стандартная macOS-группа `staff` иначе позволяет читать group-readable файлы.
 
 Локально создаётся отдельный ключ
 `/Users/ben/.ssh/air_github_runner_sidestore_ed25519`. Закрытый ключ имеет режим
@@ -88,10 +90,13 @@ runner `china_link`, работающий под пользователем `ben
 передаётся непосредственно `config.sh`; token не сохраняется в файлы и не
 печатается.
 
-Runner запускается через `launchd` от имени `github-runner-sidestore` и
-автоматически стартует после перезагрузки. Сервис вызывает официальный
-`runsvc.sh`, имеет отдельные stdout/stderr журналы в домашнем каталоге runner и
-не получает права администратора.
+Runner запускается root-owned LaunchDaemon
+`/Library/LaunchDaemons/actions.runner.ben-3310-SideStore.air-sidestore.plist`
+от имени `github-runner-sidestore` и автоматически стартует после перезагрузки.
+LaunchDaemon используется потому, что официальный пользовательский LaunchAgent
+не загружается из headless SSH-сессии без GUI bootstrap domain. Сервис вызывает
+официальный `runsvc.sh`, использует `RunAtLoad` и `KeepAlive`, имеет отдельные
+stdout/stderr журналы в HOME runner и не получает права администратора.
 
 ## Профиль и окружение
 
@@ -136,7 +141,8 @@ runner он проверяет `ldid` и `xcbeautify`, а не изменяет 
 2. `id` подтверждает отсутствие `admin` и выполнение от
    `github-runner-sidestore`.
 3. Каталоги пользователя, runner, `_work`, SSH и кэшей принадлежат новому
-   пользователю и закрыты от других локальных пользователей.
+   пользователю и закрыты от других локальных пользователей; runner не может
+   читать `/Users/ben`.
 4. Xcode 26.6, SDK и требуемые CLI-инструменты видны из окружения runner.
 5. Runner отображается в `ben-3310/SideStore` как `online` и `idle` с точными
    labels.

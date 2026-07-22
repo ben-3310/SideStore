@@ -29,7 +29,7 @@
 - `/Users/ben/.ssh/air_github_runner_sidestore_ed25519{,.pub}` — локальная выделенная пара SSH-ключей.
 - `/Users/github-runner-sidestore/` на `air` — изолированный HOME пользователя.
 - `/Users/github-runner-sidestore/actions-runner/` на `air` — официальный runner и `_work`.
-- `/Users/github-runner-sidestore/Library/LaunchAgents/actions.runner.ben-3310-SideStore.air-sidestore.plist` — service, создаваемый официальным `svc.sh`.
+- `/Library/LaunchDaemons/actions.runner.ben-3310-SideStore.air-sidestore.plist` — root-owned headless service, запускающий официальный `runsvc.sh` от имени runner.
 
 ### Task 1: Preflight хоста и Xcode
 
@@ -144,6 +144,16 @@ sudo dseditgroup -o edit -a github-runner-sidestore -t user _developer
 ```
 
 Expected: пользователь входит в `com.apple.access_ssh` и `_developer`, но не в `admin`.
+
+Закрыть HOME `ben` только для нового runner, сохранив доступ остальных
+пользователей:
+
+```bash
+sudo chmod +a 'user:github-runner-sidestore deny list,search,readattr,readextattr,readsecurity' /Users/ben
+```
+
+Expected: `github-runner-sidestore` не может читать или перечислять
+`/Users/ben`, а существующий runner `china_link` продолжает работать под `ben`.
 
 - [ ] **Step 4: Установить public key и закрыть permissions**
 
@@ -277,11 +287,21 @@ HOME=/Users/github-runner-sidestore
 
 Expected: файл принадлежит runner, режим `0600`, секретов нет.
 
+Официальный `runsvc.sh` восстанавливает PATH из `~/actions-runner/.path`,
+поэтому записать отдельно:
+
+```text
+/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/usr/sbin:/sbin
+```
+
+Expected: `.path` принадлежит runner, режим `0600`; после перезапуска service
+в stdout-журнале зафиксирован этот PATH.
+
 ### Task 4: Регистрация в GitHub и launchd service
 
 **Files:**
 - Create: `/Users/github-runner-sidestore/actions-runner/.runner`
-- Create: `/Users/github-runner-sidestore/Library/LaunchAgents/actions.runner.ben-3310-SideStore.air-sidestore.plist`
+- Create: `/Library/LaunchDaemons/actions.runner.ben-3310-SideStore.air-sidestore.plist`
 
 **Interfaces:**
 - Consumes: официальный runner package и аутентифицированный `gh` пользователя `ben`.
@@ -313,16 +333,36 @@ unset registration_token
 
 Expected: конфигурация завершена, `.runner` имеет режим `0600`, labels включают стандартные и пользовательские.
 
-- [ ] **Step 3: Установить и запустить официальный macOS service**
+- [ ] **Step 3: Установить и запустить headless macOS service**
 
 ```bash
 cd ~/actions-runner
 ./svc.sh install
-./svc.sh start
-./svc.sh status
 ```
 
-Expected: plist находится в `~/Library/LaunchAgents`, service запущен через `runsvc.sh` от имени нового пользователя.
+Официальный `svc.sh` создаёт исходный plist и `runsvc.sh`. Поскольку новый
+пользователь не имеет GUI bootstrap domain, администратор устанавливает этот
+plist как LaunchDaemon:
+
+```bash
+runner_source=/Users/github-runner-sidestore/Library/LaunchAgents/actions.runner.ben-3310-SideStore.air-sidestore.plist
+runner_daemon=/Library/LaunchDaemons/actions.runner.ben-3310-SideStore.air-sidestore.plist
+sudo install -o root -g wheel -m 644 "$runner_source" "$runner_daemon"
+sudo /usr/libexec/PlistBuddy -c 'Add :KeepAlive bool true' "$runner_daemon"
+sudo /usr/libexec/PlistBuddy -c 'Add :ThrottleInterval integer 10' "$runner_daemon"
+sudo plutil -lint "$runner_daemon"
+sudo launchctl bootstrap system "$runner_daemon"
+sudo launchctl enable system/actions.runner.ben-3310-SideStore.air-sidestore
+sudo launchctl kickstart -k system/actions.runner.ben-3310-SideStore.air-sidestore
+```
+
+Переместить исходный LaunchAgent из автозагрузочного каталога в каталог runner
+с суффиксом `.launchagent-disabled.plist`, чтобы исключить двойной запуск после
+GUI-login.
+
+Expected: `launchctl print system/actions.runner.ben-3310-SideStore.air-sidestore`
+показывает running LaunchDaemon, `username = github-runner-sidestore`,
+`keepalive | runatload | creates session`.
 
 Проверить восстановление процесса:
 
