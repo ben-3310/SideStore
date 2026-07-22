@@ -1,184 +1,130 @@
-# Проектирование CI SideStore для iOS 27
+# Уточнённое задание: SideStore runner и UI smoke на iOS 27
 
 Дата: 2026-07-22
 
-## Цель
+## Результат аудита
 
-Сделать форк `ben-3310/SideStore` самодостаточным для проверки SideStore на
-выделенных macOS GitHub Actions runners, включая фактический запуск XCTest на
-симуляторе `iPhone 13` с iOS 27. При этом никакие изменения, pull request,
-релизы или секреты не должны отправляться в исходный репозиторий
-`SideStore/SideStore`.
+Первоначальный план был шире реальной задачи. Проверка репозитория, истории и
+живой сборки Xcode 27 показала:
 
-## Подтверждённые ограничения
+- `UITests` удалён коммитом `b407bb72`, но его исходники, shared scheme и test
+  plan остались. Это незавершённое удаление, поэтому target нужно восстановить.
+- `DataStructureTests` удалён тем же коммитом, но не входит в test plan схемы
+  `SideStore` и не нужен iOS 27 runner. Его восстановление — отдельная задача.
+- Восстановленный `UITests` успешно компилируется на `iPhone 13`, iOS 27.
+- Слепо восстановленный старый xcconfig теперь создаёт bundle ID `.UITests`:
+  после рефакторинга `Build.xcconfig` нужно наследовать
+  `MAIN_BUNDLE_IDENTIFIER`, а не ссылаться на `PRODUCT_BUNDLE_IDENTIFIER`
+  рекурсивно.
+- Текущий `SideStoreTests.xctestplan` запускает все сетевые UI-тесты. Они
+  удаляют приложение, зависят от локализованных системных alert и внешних URL.
+  Такой набор нельзя делать обязательным CI gate.
+- `workflow.py` запускает `tests-build` и `tests-run` через shell pipelines без
+  `pipefail`. Ошибка `xcodebuild` может быть скрыта успешным `xcbeautify` или
+  `tee`.
+- iOS 27 workflow создаёт или переиспользует симулятор по имени, но не передаёт
+  его UDID в `xcodebuild` и вообще не запускает XCTest.
+- Локальная ветка содержит более двух тысяч строк процессной документации.
+  Публиковать её вместе с небольшим CI-изменением не нужно.
 
-- Публиковать ветки и создавать pull request разрешено только в
-  `ben-3310/SideStore`.
-- `SideStore/SideStore` используется только как источник для чтения и
-  сравнения.
-- Release/deploy workflow нельзя включать, пока они способны обращаться к
-  исходному репозиторию или требуют отсутствующих секретов.
-- Существующие пользовательские артефакты и незакоммиченные файлы в основном
-  рабочем дереве сохраняются.
-- Реализация, проверка кандидата и исправления выполняются через неизменяемые
-  candidate SHA. Публикация разрешена только после отсутствия блокирующих
-  замечаний.
+## Скорректированная цель
 
-## Текущее состояние
+Подготовить два уже зарегистрированных runner к их фактическим ролям:
 
-В проекте остались исходники UI- и data-structure-тестов, общие схемы Xcode и
-test plans. Однако определения targets `UITests` и `DataStructureTests` были
-удалены из `project.pbxproj`. Поэтому схемы ссылаются на несуществующие target
-ID, а `xcodebuild -list` не показывает ни одного XCTest target.
+- `air-sidestore`, Xcode 26.6 — доверенные nightly/stable сборки;
+- `denys-mbp-sidestore`, Xcode 27 — проверка `iPhone 13`, iOS 27.
 
-Текущий workflow совместимости с iOS 27 проверяет сборку и загрузку симулятора,
-но не исполняет XCTest. Nightly/alpha workflow имеют условные тестовые шаги,
-которые отключены отсутствующими repository variables. Release workflow также
-не готовы к безопасному использованию в форке: им нужны write-permissions и
-секреты, а часть логики рассчитана на публикацию результатов.
+Для Xcode 27 нужен честный минимальный gate:
 
-Два self-hosted runner уже зарегистрированы в форке:
+1. архив SideStore собирается;
+2. `UITests` target существует и компилируется;
+3. на отдельном `iPhone 13`, iOS 27 выполняется один детерминированный launch
+   smoke;
+4. ненулевой exit code `xcodebuild` всегда делает job красным;
+5. `.xcresult` сохраняется для диагностики.
 
-- `air-sidestore`: macOS ARM64, Xcode 26.6;
-- `denys-mbp-sidestore`: macOS ARM64, Xcode 27 и runtime iOS 27.
+## Изменения в проекте
 
-Для iOS 27 workflow должен маршрутизироваться только на второй runner по
-меткам `xcode-27-0` и `ios-27`.
+### UITests target
 
-## Выбранное решение
+Восстанавливается только `UITests` с прежним target ID
+`A8E2DB202D684CBD009E5D31`, чтобы существующая схема продолжила работать.
+Возвращаются его product reference, build phases, target dependency,
+configuration list и membership исходников.
 
-### 1. Восстановление XCTest targets
+`xcconfigs/UITests.xcconfig` должен использовать текущий контракт:
 
-В `AltStore.xcodeproj/project.pbxproj` восстанавливаются оба удалённых target:
+```xcconfig
+#include "../Build.xcconfig"
 
-- `UITests`;
-- `DataStructureTests`.
+PRODUCT_BUNDLE_IDENTIFIER = $(MAIN_BUNDLE_IDENTIFIER).UITests
+```
 
-Используются прежние target ID и product/configuration ID, чтобы существующие
-shared schemes и `.xctestplan` снова разрешались без их переписывания. В target
-возвращаются необходимые source membership, build phases, зависимости от
-приложения и параметры test host/UI test target application.
+Regression-тест проверяет target graph, разрешение scheme/test plan и итоговый
+bundle ID. `DataStructureTests` в этот diff не входит.
 
-Вместе с targets восстанавливаются удалённые позднейшим cleanup-коммитом
-`xcconfigs/UITests.xcconfig` и `xcconfigs/DataStructureTests.xcconfig`. Каждый
-файл наследует актуальный `Build.xcconfig` и задаёт отдельный bundle identifier
-для тестового bundle. Нельзя оставлять в project ссылки на отсутствующие
-base-configuration файлы или заменять тестовые bundle ID идентификатором
-приложения.
+### Детерминированный UI smoke
 
-До изменения Xcode-проекта добавляются структурные regression-тесты, которые
-должны сначала зафиксировать проблему: требуемые PBX targets, продукты,
-configuration lists и ссылки test plans отсутствуют или неразрешимы.
+В `UITestsLaunchTests` включается один тест, который запускает приложение и
+проверяет переход в foreground. Обязательная CI-конфигурация test plan исключает
+четыре сетевых bulk-source сценария.
 
-### 2. Реальный iOS 27 test gate
+Исходники сетевых тестов не удаляются: они остаются для ручного запуска и
+отдельной стабилизации. CI не должен обращаться к внешним каталогам приложений.
 
-Workflow совместимости создаёт или переиспользует отдельный симулятор
-`iPhone 13` с точной версией iOS 27. Затем он выполняет:
+### Честное выполнение команд
 
-1. `build-for-testing` для схемы SideStore;
-2. `test-without-building` с тем же destination;
-3. сохранение `.xcresult` и диагностических логов независимо от успеха тестов;
-4. удаление только созданного workflow временного симулятора.
+В `workflow.py` test pipelines получают `set -o pipefail`. Проверка считается
+успешной только по реальному exit code `make`/`xcodebuild`, а не последней
+команды pipeline.
 
-Destination задаётся однозначно через UDID созданного симулятора. Это исключает
-случайный выбор другого устройства с совпадающим именем.
+Makefile принимает полный `SIMULATOR_DESTINATION`. Workflow создаёт уникальный
+симулятор, записывает destination с его UDID и удаляет только этот симулятор в
+`always()` cleanup.
 
-Если часть старых тестов несовместима с Xcode 27 или текущим приложением,
-исправляются именно тесты или test configuration. Тестовый запуск не заменяется
-компиляцией и не маскируется как успешный.
+После `build-for-testing` workflow загружает симулятор, выполняет
+`test-without-building` и всегда публикует `.xcresult`.
 
-### 3. Безопасность GitHub Actions
+## GitHub Actions и безопасность
 
-Для CI workflow задаются минимальные явные permissions, преимущественно
-`contents: read`. Сторонние actions закрепляются за полными commit SHA; устаревший
-`actions/cache@v3` обновляется до поддерживаемой версии с закреплённым SHA.
+- Self-hosted iOS 27 workflow запускается только из доверенного контекста:
+  `push` в `develop` и `workflow_dispatch`.
+- `pull_request` и `pull_request_target` для self-hosted job не добавляются.
+- Workflow получает только `contents: read`.
+- Actions, используемые этим новым включаемым workflow, закрепляются за commit
+  SHA. Массовое переписывание всех старых workflow не входит в задачу.
+- Nightly/stable routing к `air-sidestore` сохраняется, но эти workflow в форке
+  не включаются автоматически.
+- `CROSS_REPO_PUSH_KEY` не создаётся. Любой cross-repository deploy остаётся
+  недоступным.
 
-Workflow, способные создавать релизы, пушить изменения или обращаться к
-другому репозиторию, остаются выключенными. В форк не добавляется
-`CROSS_REPO_PUSH_KEY`, а отсутствие такого ключа считается защитным свойством.
+## Публикация
 
-Секрет для упаковки build logs не создаётся автоматически: его значение нельзя
-безопасно придумать от имени пользователя. Если он окажется обязательным для
-включаемого workflow, это будет отдельным явным блокером, а не причиной
-публиковать незашифрованные логи.
+Процессные спецификации и планы остаются локальными. Для GitHub создаётся
+чистая публикационная ветка от `origin/develop`, содержащая только необходимый
+product/CI diff и его regression-тесты.
 
-### 4. Workflow, которые можно включить
+Push, PR и merge допустимы только в `ben-3310/SideStore`. Перед каждой записью
+проверяется owner. `SideStore/SideStore` используется только для чтения.
 
-После локальных проверок в форке включаются только workflow без внешней
-публикации:
+## Не входит в задачу
 
-- PR/build verification;
-- iOS 27 compatibility.
+- восстановление `DataStructureTests`;
+- стабилизация всех сетевых UI-тестов;
+- изменение `pr.yml`, alpha, release metadata или внешнего apps repository;
+- массовое обновление/pinning всех старых actions;
+- branch protection и rulesets до появления стабильного CI check;
+- публикация AI-планов и внутренних runbook в продуктовый PR;
+- удаление пользовательских `.ipa`, `.zip`, `.build` и других артефактов;
+- изменение runner другого проекта на удалённом Mac.
 
-Nightly, alpha, stable и attach-build-products остаются выключенными до
-отдельной проверки их write-path, permissions и секретов. Это предотвращает
-непреднамеренный релиз или запись в исходный репозиторий.
+## Критерии завершения
 
-### 5. GitHub-публикация
-
-Готовый кандидат публикуется в новую ветку remote `origin`, URL которого перед
-операцией повторно проверяется как `ben-3310/SideStore`. Pull request создаётся
-с head и base внутри того же форка: новая ветка → `ben-3310/SideStore:develop`.
-
-Перед каждой write-операцией проверяется, что целевой owner равен `ben-3310`.
-Remote `upstream` никогда не используется для push. После создания PR читаются
-его canonical URL, head/base repositories и запущенные checks.
-
-Слияние допускается только после зелёных обязательных проверок и отсутствия
-блокирующих review findings. Защита ветки `develop` настраивается после
-появления стабильных имён checks; она должна требовать безопасный build/test
-gate и запрещать случайный force-push.
-
-## Обработка ошибок
-
-- Если нужный iOS 27 runtime отсутствует, workflow завершается явной ошибкой с
-  выводом доступных runtimes и не подменяет destination.
-- Если нет свободного подходящего runner, job остаётся queued; workflow не
-  перенаправляется на runner с неподходящим Xcode.
-- Если test target не разрешается, структурные тесты и `xcodebuild -list`
-  блокируют candidate ещё до GitHub-публикации.
-- Если XCTest падает, `.xcresult` и логи загружаются как артефакт, а job остаётся
-  красным.
-- Если PR или push разрешается только в другом owner/repository, операция
-  прекращается без попытки обхода.
-- Если GitHub не позволяет установить branch protection для форка, это
-  фиксируется как отдельное ограничение; успешный CI при этом не выдаётся за
-  настроенную защиту ветки.
-
-## Проверки
-
-Локальный обязательный минимум:
-
-- структурные Python regression-тесты для Xcode project и workflow;
-- синтаксический разбор всех изменённых YAML;
-- `xcodebuild -list` с наличием обоих XCTest targets;
-- `xcodebuild build-for-testing` на `iPhone 13`, iOS 27;
-- `xcodebuild test-without-building` с фактическим выполнением XCTest;
-- проверка содержимого `.xcresult` и количества выполненных тестов;
-- проверка отсутствия write-path к `SideStore/SideStore` в включаемых workflow;
-- проверка frozen diff `base SHA..candidate SHA` и самостоятельный review.
-
-После публикации в форк:
-
-- проверка head/base repository у PR;
-- успешный iOS 27 workflow на `denys-mbp-sidestore`;
-- успешный безопасный PR/build workflow;
-- отсутствие release/deploy jobs и любых записей в исходный репозиторий;
-- повторная проверка candidate SHA после возможных fixes.
-
-## Не входит в эту работу
-
-- Публикация веток, PR, релизов или артефактов в `SideStore/SideStore`.
-- Создание Apple signing-секретов или release credentials без предоставленных
-  значений и отдельного разрешения.
-- Изменение независимого runner проекта `china_link` на удалённом Mac.
-- Удаление существующих пользовательских `.ipa`, `.zip`, `.build` и других
-  локальных артефактов.
-
-## Критерий завершения
-
-Работа завершена, когда оба XCTest targets восстановлены, реальные тесты
-выполняются на `iPhone 13` с iOS 27, безопасные workflow проходят на
-self-hosted runners, а все GitHub-изменения и PR находятся исключительно в
-`ben-3310/SideStore`. Ни одна операция записи в исходный репозиторий не должна
-быть выполнена.
+- Xcode 27 показывает `UITests` target и корректный bundle ID.
+- `build-for-testing` и один launch smoke проходят на отдельном `iPhone 13`,
+  iOS 27.
+- Искусственно сломанный test command подтверждает, что pipeline возвращает
+  ошибку, а не ложный success.
+- Симулятор адресуется точным UDID и удаляется после job.
+- На GitHub опубликован только компактный функциональный diff в
+  `ben-3310/SideStore`; upstream не изменён.

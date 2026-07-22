@@ -1,490 +1,127 @@
-# План реализации XCTest CI SideStore для iOS 27
+# Скорректированный план SideStore UI smoke на iOS 27
 
-> План выполняется последовательно в отдельном Git worktree. После каждого
-> смыслового этапа создаётся локальный коммит. Публикация разрешена только в
-> `ben-3310/SideStore`.
+## 1. Сузить восстановление до UITests
 
-**Цель:** восстановить удалённые XCTest targets, запустить детерминированные
-unit- и UI-smoke-тесты на `iPhone 13` с iOS 27 и сделать безопасный CI в форке.
+Файлы:
 
-**Архитектура:** существующие shared schemes и test plans снова связываются с
-историческими target ID. Один CI test plan объединяет unit-тесты структур данных
-и один устойчивый UI launch smoke. Workflow создаёт отдельный симулятор,
-передаёт его UDID в Makefile, выполняет `build-for-testing` и
-`test-without-building`, затем публикует `.xcresult`. Self-hosted workflow
-исполняется для push в `develop`, ручного запуска и только для внутренних PR из
-того же форка.
+- `AltStore.xcodeproj/project.pbxproj`;
+- `xcconfigs/UITests.xcconfig`;
+- `scripts/ci/test_xcode_test_targets.py`.
 
-**Стек:** Xcode 27, `xcodebuild`, XCTest/Swift Testing, CoreSimulator `simctl`,
-Python `unittest`, GitHub Actions YAML, `actionlint`, Git/GitHub CLI.
+Действия:
 
----
+1. Из regression-теста убрать требования к `DataStructureTests`.
+2. Из уже подготовленного project diff удалить все объекты
+   `DataStructureTests` и его xcconfig.
+3. Исправить `UITests.xcconfig` на
+   `$(MAIN_BUNDLE_IDENTIFIER).UITests`.
+4. Проверить `xcodebuild -list` и `-showBuildSettings -target UITests`.
+5. Ожидать bundle ID вида `com.SideStore.SideStore.UITests`, не `.UITests`.
 
-## Задача 1. Создать изолированное рабочее дерево
+Коммит: `fix: restore SideStore UITests target`.
 
-**Файлы:** без изменений.
+## 2. Сделать один устойчивый UI launch smoke
 
-1. Проверить, что основной checkout содержит только известные пользовательские
-   untracked-артефакты.
+Файлы:
 
-   ```bash
-   rtk git status --short --branch
-   rtk git worktree list
-   ```
+- `SideStore/Tests/UITests/UITestsLaunchTests.swift`;
+- `SideStore/Tests/SideStoreTests.xctestplan`;
+- `AltStore.xcodeproj/xcshareddata/xcschemes/SideStore.xcscheme`;
+- `scripts/ci/test_xcode_test_targets.py`.
 
-   Ожидание: `develop` опережает `origin/develop`; `.build` и архивы остаются
-   нетронутыми.
+Действия:
 
-2. Убедиться, что `.worktrees` игнорируется.
+1. Сначала тестом потребовать активный `testLaunch()` и отсутствие ссылки на
+   несуществующий `UITests/testExample()`.
+2. Включить launch smoke, который проверяет foreground state приложения.
+3. В обязательной конфигурации test plan пропустить четыре сетевых теста и
+   выполнять launch smoke.
+4. Сетевые тестовые исходники не удалять.
 
-   ```bash
-   rtk git check-ignore -q .worktrees
-   ```
+Коммит: `test: add deterministic SideStore launch smoke`.
 
-3. Создать ветку и worktree от текущего `develop`.
+## 3. Исправить ложнозелёные test pipelines
 
-   ```bash
-   rtk git worktree add .worktrees/ios27-xctest-ci -b agent/ios27-xctest-ci develop
-   ```
+Файлы:
 
-4. Инициализировать закреплённые submodules без `--remote`.
+- `scripts/ci/workflow.py`;
+- новый или существующий тест в `scripts/ci/`.
 
-   ```bash
-   rtk git submodule update --init --recursive
-   ```
+Действия:
 
-5. Зафиксировать два base SHA:
+1. Regression-тестом подтвердить, что pipeline с падающей первой командой не
+   возвращает ноль.
+2. Добавить `set -o pipefail &&` в `tests_build()` и `tests_run()`.
+3. Не менять release/deploy функции.
 
-   ```bash
-   rtk git rev-parse HEAD                # task base
-   rtk git rev-parse origin/develop      # publication/review base
-   ```
+Коммит: `fix: propagate SideStore test failures`.
 
-   Task base содержит утверждённую спецификацию и этот план. Полный frozen
-   review перед PR обязан использовать `origin/develop..candidate`, потому что
-   локальный `develop` уже содержит ранее подготовленные runner/CI-коммиты,
-   которых ещё нет в форке.
+## 4. Использовать точный simulator destination
 
-## Задача 2. Зафиксировать отсутствие XCTest targets падающим тестом
+Файлы:
 
-**Файлы:**
+- `Makefile`;
+- `scripts/ci/test_runner_workflows.py`.
 
-- создать `scripts/ci/test_xcode_test_targets.py`;
-- тестировать `AltStore.xcodeproj/project.pbxproj`;
-- тестировать `SideStore/Tests/*.xctestplan` и shared schemes.
+Действия:
 
-1. Добавить `unittest`, который читает проект как текст и JSON test plans.
-   Проверить:
+1. Добавить
+   `SIMULATOR_DESTINATION ?= platform=iOS Simulator,name=$(SIMULATOR_DEVICE),OS=$(SIMULATOR_OS)`.
+2. Все test-команды направить в `$(SIMULATOR_DESTINATION)`.
+3. Сохранить совместимость ручного запуска по имени/OS.
 
-   - native target ID `A8E2DB202D684CBD009E5D31` с именем `UITests`;
-   - native target ID `A81A8CC42D68BA610086C96F` с именем
-     `DataStructureTests`;
-   - продукты `UITests.xctest` и `DataStructureTests.xctest`;
-   - build phases, configuration lists и зависимость UI target от SideStore;
-   - оба target входят в `PBXProject.targets`;
-   - test plans и schemes ссылаются только на существующие target ID;
-   - оба test-target xcconfig существуют и задают отдельные bundle ID.
+Коммит: `ci: support exact simulator destination`.
 
-2. Запустить только новый тест.
+## 5. Завершить минимальный iOS 27 workflow
 
-   ```bash
-   rtk env PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
-     scripts.ci.test_xcode_test_targets -v
-   ```
+Файлы:
 
-   Ожидание: FAIL на отсутствующем `UITests` или `DataStructureTests` target.
+- `.github/workflows/ios27-compatibility.yml`;
+- `scripts/ci/test_runner_workflows.py`.
 
-3. Закоммитить красный regression-тест.
+Действия:
 
-   ```bash
-   rtk git add scripts/ci/test_xcode_test_targets.py
-   rtk git commit -m "test: require SideStore XCTest targets"
-   ```
+1. Оставить только `push: develop` и `workflow_dispatch`.
+2. Добавить `permissions: contents: read`.
+3. Создавать уникальный `iPhone 13` на runtime iOS 27 и передавать его UDID в
+   `SIMULATOR_DESTINATION`.
+4. Выполнить archive build, `tests-build`, boot и `tests-run`.
+5. Загружать `.xcresult` с `if: always()`.
+6. В cleanup выключать и удалять только созданный workflow симулятор.
+7. Закрепить используемые checkout/upload actions за commit SHA.
 
-## Задача 3. Восстановить XCTest targets и xcconfig
+Коммит: `ci: run SideStore launch smoke on iOS 27`.
 
-**Файлы:**
+## 6. Проверить exact candidate
 
-- изменить `AltStore.xcodeproj/project.pbxproj`;
-- создать `xcconfigs/UITests.xcconfig`;
-- создать `xcconfigs/DataStructureTests.xcconfig`.
+Обязательные проверки:
 
-1. Используя состояние непосредственно перед
-   `b407bb72490fcb780f722307daf8ecb4df966710` как источник, восстановить через
-   точечные patch-блоки:
-
-   - `PBXContainerItemProxy` и `PBXTargetDependency` для SideStore → UITests;
-   - два test product reference;
-   - synchronized group exception sets для исходников тестов и тестируемых
-     data-structure source files;
-   - Sources/Frameworks/Resources phases;
-   - оба `PBXNativeTarget`;
-   - TargetAttributes и элементы `PBXProject.targets`;
-   - Debug/Release `XCBuildConfiguration`;
-   - обе `XCConfigurationList`.
-
-2. Восстановить минимальные xcconfig:
-
-   ```text
-   #include "../Build.xcconfig"
-
-   PRODUCT_BUNDLE_IDENTIFIER = $(PRODUCT_BUNDLE_IDENTIFIER).UITests
-   ```
-
-   и аналогичный suffix `.DataStructureTests`.
-
-3. Не копировать слепо устаревшие signing credentials. Deployment target
-   согласовать с текущим проектом, сохранив возможность запуска на iOS 27.
-
-4. Запустить новый тест и список Xcode targets.
-
-   ```bash
-   rtk env PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
-     scripts.ci.test_xcode_test_targets -v
-   rtk xcodebuild -project AltStore.xcodeproj -list
-   ```
-
-   Ожидание: PASS; в `Targets` присутствуют `UITests` и
-   `DataStructureTests`.
-
-5. Закоммитить восстановление.
-
-   ```bash
-   rtk git add AltStore.xcodeproj/project.pbxproj xcconfigs \
-     scripts/ci/test_xcode_test_targets.py
-   rtk git commit -m "fix: restore SideStore XCTest targets"
-   ```
-
-## Задача 4. Сделать тестовый набор детерминированным
-
-**Файлы:**
-
-- изменить `SideStore/Tests/UITests/UITestsLaunchTests.swift`;
-- изменить `SideStore/Tests/SideStoreTests.xctestplan`;
-- при необходимости изменить
-  `AltStore.xcodeproj/xcshareddata/xcschemes/SideStore.xcscheme`;
-- изменить `scripts/ci/test_xcode_test_targets.py`.
-
-1. Сначала расширить Python-тест требованиями:
-
-   - CI test plan включает `UITests` и `DataStructureTests`;
-   - UI test plan запускает ровно устойчивый launch smoke, а сетевые bulk-source
-     сценарии исключены из обязательного gate;
-   - схема не содержит устаревшего selected test `UITests/testExample()`;
-   - `UITestsLaunchTests/testLaunch()` не закомментирован.
-
-2. Запустить тест и получить FAIL.
-
-   ```bash
-   rtk env PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
-     scripts.ci.test_xcode_test_targets -v
-   ```
-
-3. Реализовать `testLaunch()`:
-
-   ```swift
-   func testLaunch() throws {
-       let app = XCUIApplication()
-       app.launch()
-       XCTAssertTrue(app.wait(for: .runningForeground, timeout: 15))
-   }
-   ```
-
-4. Включить в `SideStoreTests.xctestplan` unit target и launch smoke. Сетевые
-   UI-тесты оставить доступными для ручного запуска, но исключить из
-   обязательной CI-конфигурации.
-
-5. Удалить из scheme ссылку на несуществующий `UITests/testExample()`.
-
-6. Повторно запустить структурный тест и проверить test plans через Xcode.
-
-   ```bash
-   rtk env PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
-     scripts.ci.test_xcode_test_targets -v
-   rtk xcodebuild -project AltStore.xcodeproj -scheme SideStore -showTestPlans
-   ```
-
-7. Закоммитить детерминированный test plan.
-
-   ```bash
-   rtk git add SideStore/Tests AltStore.xcodeproj/xcshareddata/xcschemes \
-     scripts/ci/test_xcode_test_targets.py
-   rtk git commit -m "test: add deterministic SideStore CI test plan"
-   ```
-
-## Задача 5. Передавать точный simulator UDID в Makefile
-
-**Файлы:**
-
-- изменить `Makefile`;
-- изменить `scripts/ci/test_runner_workflows.py`.
-
-1. Изменить regression-тест: вместо подсчёта жёстко собранных
-   `name=...,OS=...` потребовать переменную:
-
-   ```make
-   SIMULATOR_DESTINATION ?= platform=iOS Simulator,name=$(SIMULATOR_DEVICE),OS=$(SIMULATOR_OS)
-   ```
-
-   Все три test-команды должны использовать
-   `-destination '$(SIMULATOR_DESTINATION)'`.
-
-2. Запустить тест и получить FAIL.
-
-   ```bash
-   rtk env PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
-     scripts.ci.test_runner_workflows.RunnerWorkflowTests.test_simulator_destination_can_be_pinned_by_runner -v
-   ```
-
-3. Внести минимальное изменение Makefile и повторить тест.
-
-4. Закоммитить.
-
-   ```bash
-   rtk git add Makefile scripts/ci/test_runner_workflows.py
-   rtk git commit -m "ci: support exact simulator destination"
-   ```
-
-## Задача 6. Превратить iOS 27 workflow в реальный XCTest gate
-
-**Файлы:**
-
-- изменить `.github/workflows/ios27-compatibility.yml`;
-- изменить `scripts/ci/test_runner_workflows.py`.
-
-1. Сначала потребовать тестом:
-
-   - верхнеуровневое `permissions: contents: read`;
-   - `pull_request_target` допускает job только когда
-     `github.event.pull_request.head.repo.full_name == github.repository`;
-   - обычный `pull_request` отсутствует;
-   - симулятор создаётся с уникальным CI-именем и его UDID записывается в
-     `GITHUB_ENV` как `SIMULATOR_DESTINATION=platform=iOS Simulator,id=...`;
-   - workflow вызывает `tests-build` и `tests-run`;
-   - `.xcresult` загружается с `if: always()`;
-   - cleanup удаляет только симулятор, созданный текущим job;
-   - release/upload-release и `CROSS_REPO_PUSH_KEY` отсутствуют.
-
-2. Запустить тест и получить FAIL на отсутствии `tests-run`.
-
-   ```bash
-   rtk env PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
-     scripts.ci.test_runner_workflows -v
-   ```
-
-3. Реализовать workflow:
-
-   - проверить Xcode 27 и runtime iOS 27;
-   - создать отдельный `SideStore-CI-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`;
-   - сохранить UDID и признак владения симулятором через `GITHUB_ENV`;
-   - выполнить repository regression checks, archive smoke,
-     `tests-build`, загрузку симулятора и `tests-run`;
-   - всегда загрузить `build/tests/test-results.xcresult` и логи;
-   - в `always()` shutdown/delete только сохранённый CI UDID.
-
-4. Добавить проверку результата после `tests-run` через
-   `xcrun xcresulttool`: тестовый run обязан содержать выполненные тесты; нулевой
-   test count является ошибкой.
-
-5. Запустить Python-тесты и синтаксическую проверку YAML.
-
-   ```bash
-   rtk env PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
-     -s scripts/ci -p 'test_*.py' -v
-   rtk actionlint .github/workflows/ios27-compatibility.yml
-   ```
-
-6. Закоммитить.
-
-   ```bash
-   rtk git add .github/workflows/ios27-compatibility.yml \
-     scripts/ci/test_runner_workflows.py
-   rtk git commit -m "ci: run XCTest on iPhone 13 with iOS 27"
-   ```
-
-## Задача 7. Усилить включаемые GitHub Actions workflow
-
-**Файлы:**
-
-- изменить `.github/workflows/pr.yml`;
-- изменить `.github/workflows/ios27-compatibility.yml`;
-- изменить `scripts/ci/test_runner_workflows.py`.
-
-1. Добавить тест, который для двух включаемых workflow запрещает mutable
-   action refs и требует полный 40-символьный commit SHA. Отдельно проверить
-   отсутствие `actions/cache/*@v3`.
-
-2. Получить FAIL на текущих `@v4`, `@v3` и `@v1.6.0`.
-
-3. Через `git ls-remote` получить текущие commit SHA официальных тегов:
-
-   - `actions/checkout@v4`;
-   - `actions/cache/restore@v4` и `actions/cache/save@v4`;
-   - `actions/upload-artifact@v4`;
-   - `maxim-lobanov/setup-xcode@v1.6.0`.
-
-   Для annotated tags использовать dereferenced `^{}` SHA. Рядом оставить
-   комментарий с исходным тегом для обновляемости.
-
-4. В `pr.yml` добавить `permissions: contents: read`, обновить cache action до
-   v4 SHA и закрепить остальные actions. Не переводить untrusted PR на
-   self-hosted runner.
-
-5. Закрепить actions в iOS 27 workflow.
-
-6. Запустить тесты и `actionlint` для всех workflow.
-
-   ```bash
-   rtk env PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
-     -s scripts/ci -p 'test_*.py' -v
-   rtk actionlint
-   ```
-
-7. Закоммитить hardening.
-
-   ```bash
-   rtk git add .github/workflows/pr.yml \
-     .github/workflows/ios27-compatibility.yml \
-     scripts/ci/test_runner_workflows.py
-   rtk git commit -m "ci: harden fork verification workflows"
-   ```
-
-## Задача 8. Выполнить локальные Xcode 27 проверки
-
-**Файлы:** менять только при подтверждённой ошибке теста или совместимости.
-
-1. Проверить toolchain и destination.
-
-   ```bash
-   rtk xcodebuild -version
-   rtk xcrun simctl list runtimes
-   rtk xcrun simctl list devicetypes
-   ```
-
-2. Создать отдельный временный `iPhone 13` на runtime iOS 27 и записать его
-   UDID. Не использовать и не удалять пользовательские симуляторы.
-
-3. Выполнить полный regression suite.
-
-   ```bash
-   rtk env PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
-     -s scripts/ci -p 'test_*.py' -v
-   rtk actionlint
-   rtk git diff --check
-   ```
-
-4. Выполнить exact-destination Xcode проверки с отключённым signing:
-
-   ```bash
-   rtk env SIMULATOR_DESTINATION="platform=iOS Simulator,id=<UDID>" \
-     python3 scripts/ci/workflow.py tests-build
-   rtk xcrun simctl boot <UDID>
-   rtk xcrun simctl bootstatus <UDID> -b
-   rtk env SIMULATOR_DESTINATION="platform=iOS Simulator,id=<UDID>" \
-     python3 scripts/ci/workflow.py tests-run
-   ```
-
-5. Проверить `.xcresult` через `xcresulttool`: должны присутствовать успешный
-   UI launch smoke и unit-тесты `LinkedHashMapTests`/`TreeMapTests`, test count
-   больше нуля.
-
-6. Всегда выключить и удалить только временный CI simulator.
-
-7. При падении исправлять минимальную причину по TDD, затем повторять весь
-   обязательный набор. Создать отдельный fix-коммит.
-
-## Задача 9. Заморозить кандидата и провести самостоятельный review
-
-**Файлы:** только review/fix изменения при наличии блокеров.
-
-1. Зафиксировать все изменения и убедиться, что worktree чистый.
-
-   ```bash
-   rtk git status --short
-   rtk git rev-parse HEAD
-   ```
-
-2. Сформировать handoff:
-
-   - scope: XCTest targets + iOS 27 fork CI;
-   - task base SHA из задачи 1;
-   - publication base SHA `origin/develop` из задачи 1;
-   - candidate SHA;
-   - полный `publication base..candidate` diff;
-   - точные локальные проверки и test count.
-
-3. Выполнить один полный read-only review frozen diff. Каждому замечанию дать
-   стабильный ID, приоритет, `file:line`/сценарий и условие закрытия.
-
-4. Блокирующими считать только корректность, безопасность, потерю данных,
-   нарушение спецификации или красную обязательную проверку.
-
-5. Если есть блокеры, выполнить не более двух узких fixes-циклов с новым
-   candidate SHA и адресной повторной проверкой известных ID.
-
-6. Проверить, что diff не содержит secrets, push в upstream, release/deploy
-   включения или удаления пользовательских артефактов.
-
-## Задача 10. Опубликовать и проверить только пользовательский форк
-
-**GitHub scope:** только `ben-3310/SideStore`.
-
-1. Перед записью проверить remote и authenticated repository:
-
-   ```bash
-   rtk git remote -v
-   rtk gh repo view ben-3310/SideStore --json nameWithOwner,isFork,parent
-   ```
-
-   Ожидание: `origin` указывает на `ben-3310/SideStore`; `upstream` используется
-   только для чтения.
-
-2. До создания PR включить только безопасный PR workflow в
-   `ben-3310/SideStore` и прочитать его state обратно. Остальные workflow
-   оставить выключенными.
-
-3. Push только candidate branch:
-
-   ```bash
-   rtk git push --set-upstream origin agent/ios27-xctest-ci
-   ```
-
-4. Создать PR только внутри форка:
-
-   ```bash
-   rtk gh pr create --repo ben-3310/SideStore --base develop \
-     --head agent/ios27-xctest-ci --title "Restore XCTest CI for iOS 27" \
-     --body-file <подготовленный-файл>
-   ```
-
-5. Прочитать PR обратно и проверить `baseRepository.nameWithOwner`,
-   `headRepository.nameWithOwner`, base/head refs и candidate SHA. Если любой
-   owner не `ben-3310`, остановиться без дальнейшей записи.
-
-6. Проверить, что PR workflow был запущен событием создания PR, затем проверить
-   его checks и логи. Release/nightly/alpha/stable/attach-build-products должны
-   оставаться disabled.
-
-7. Bootstrap-особенность: новый iOS 27 workflow ещё отсутствует в default
-   branch, поэтому его pre-merge доказательством служит локальный exact-SHA run
-   из задачи 8. После зелёного PR build и review слить PR только в
-   `ben-3310/SideStore:develop`.
-
-8. После merge проверить автоматический push-run iOS 27 workflow на
-   `denys-mbp-sidestore`, его candidate/merge SHA, test count и артефакт
-   `.xcresult`. При ошибке создать fixes-ветку и новый PR в том же форке.
-
-9. Убедиться, что iOS 27 и PR verification workflow включены; остальные
-   оставить disabled.
-
-10. После появления стабильных check names настроить protection для
-   `ben-3310/SideStore:develop`: запрет force-push/delete и обязательные
-   безопасные checks для будущих внутренних PR. Прочитать настройки обратно.
-
-11. Финально подтвердить через GitHub API:
-
-    - нет PR/веток/релизов, созданных в `SideStore/SideStore`;
-    - PR и merge находятся только в `ben-3310/SideStore`;
-    - оба runners online, нужный job выполнился на iOS 27 runner;
-    - release/deploy workflow не включены;
-    - локальные пользовательские артефакты сохранены.
+```bash
+rtk env PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
+  -s scripts/ci -p 'test_*.py' -v
+rtk actionlint
+rtk xcodebuild -project AltStore.xcodeproj -list
+```
+
+На отдельном временном симуляторе:
+
+- `iPhone 13`, runtime iOS 27;
+- `build-for-testing`;
+- `test-without-building`;
+- `.xcresult` содержит ровно обязательный launch smoke и ненулевой test count;
+- временный симулятор удалён.
+
+Затем зафиксировать candidate SHA и провести полный review диапазона
+`origin/develop..candidate`. Допускается не более двух узких fixes-циклов.
+
+## 7. Подготовить компактную публикацию
+
+1. Создать чистую ветку от `origin/develop`.
+2. Перенести только функциональные изменения runner/CI, UITests и regression
+   tests. Не включать `docs/superpowers/**`.
+3. Повторить обязательные проверки на точном publication SHA.
+4. Проверить `origin == ben-3310/SideStore`.
+5. Push и PR делать только в `ben-3310/SideStore:develop`.
+6. Не включать nightly/stable/release workflow автоматически.
+7. После merge проверить push-run iOS 27 на `denys-mbp-sidestore`.
+8. При post-merge ошибке исправлять отдельной веткой/PR только в форке.
