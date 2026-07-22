@@ -223,7 +223,13 @@ def build_process_info_command(device_identifier: str, output_path: Path) -> lis
 
 
 def parse_test_summary(summary: dict[str, Any]) -> None:
-    expected = {"totalTestCount": 1, "failedTests": 0, "skippedTests": 0}
+    expected = {
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "result": "Passed",
+    }
     if any(summary.get(key) != value for key, value in expected.items()):
         raise RuntimeError(
             "XCTest launch smoke did not produce exactly one passing, non-skipped test"

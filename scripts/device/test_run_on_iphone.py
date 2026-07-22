@@ -163,13 +163,35 @@ class ReportingTests(unittest.TestCase):
         self.assertNotIn("00000000-0000000000000000", output)
 
     def test_accepts_exactly_one_passed_test(self):
-        parse_test_summary({"totalTestCount": 1, "failedTests": 0, "skippedTests": 0})
+        parse_test_summary(
+            {
+                "totalTestCount": 1,
+                "passedTests": 1,
+                "failedTests": 0,
+                "skippedTests": 0,
+                "result": "Passed",
+            }
+        )
 
     def test_rejects_failed_skipped_or_wrong_count(self):
         for summary in (
             {"totalTestCount": 0, "failedTests": 0, "skippedTests": 0},
             {"totalTestCount": 1, "failedTests": 1, "skippedTests": 0},
             {"totalTestCount": 1, "failedTests": 0, "skippedTests": 1},
+            {
+                "totalTestCount": 1,
+                "passedTests": 0,
+                "failedTests": 0,
+                "skippedTests": 0,
+                "result": "Passed",
+            },
+            {
+                "totalTestCount": 1,
+                "passedTests": 1,
+                "failedTests": 0,
+                "skippedTests": 0,
+                "result": "Failed",
+            },
         ):
             with self.subTest(summary=summary):
                 with self.assertRaises(RuntimeError):
