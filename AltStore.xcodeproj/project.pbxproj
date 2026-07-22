@@ -841,7 +841,7 @@
 				OTHER_LIBTOOLFLAGS = "-no_warning_for_no_symbols";
 				PRODUCT_MODULE_NAME = em_proxy;
 				PRODUCT_NAME = em_proxy_swift;
-				SKIP_INSTALL = NO;
+				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OBJC_BRIDGING_HEADER = Dependencies/em_proxy/em_proxy.h;
 				SWIFT_VERSION = 5.0;
@@ -872,7 +872,7 @@
 				OTHER_LIBTOOLFLAGS = "-no_warning_for_no_symbols";
 				PRODUCT_MODULE_NAME = em_proxy;
 				PRODUCT_NAME = em_proxy_swift;
-				SKIP_INSTALL = NO;
+				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = Dependencies/em_proxy/em_proxy.h;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
