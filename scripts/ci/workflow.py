@@ -8,7 +8,12 @@ import time
 import json
 import re
 from posix import getcwd
-from scripts.ci.dependencies import verify_dependencies
+try:
+    from scripts.ci.dependencies import verify_dependencies
+except ModuleNotFoundError as error:
+    if error.name != "scripts":
+        raise
+    from dependencies import verify_dependencies
 
 # REPO ROOT relative to script dir
 ROOT = Path(__file__).resolve().parents[2]

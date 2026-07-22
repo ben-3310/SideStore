@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import re
 import subprocess
 import unittest
 from pathlib import Path
@@ -41,6 +42,17 @@ class WorkflowPipelineTests(unittest.TestCase):
             self.workflow.tests_build()
 
         self.assertEqual(verify.call_args.args, (self.workflow.ROOT,))
+
+    def test_direct_script_commit_id_returns_short_git_sha(self) -> None:
+        completed = subprocess.run(
+            ["python3", "scripts/ci/workflow.py", "commit-id"],
+            cwd=REPO_ROOT,
+            text=True,
+            capture_output=True,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertRegex(completed.stdout.strip(), r"^[0-9a-f]{7,40}$")
 
     def test_tests_build_propagates_pipeline_failures(self) -> None:
         with patch.object(self.workflow, "run") as run:
