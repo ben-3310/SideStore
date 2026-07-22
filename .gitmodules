@@ -10,5 +10,5 @@
 
 [submodule "Dependencies/AltSign"]
     path = Dependencies/AltSign
-    url = https://github.com/SideStore/AltSign
+    url = ../AltSign
     branch = master

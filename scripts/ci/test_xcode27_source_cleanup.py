@@ -1,3 +1,4 @@
+import configparser
 import unittest
 from pathlib import Path
 
@@ -7,6 +8,17 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 def source_text(relative_path: str) -> str:
     return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+
+
+def submodule_url(name: str) -> str:
+    config = configparser.ConfigParser()
+    config.read(REPO_ROOT / ".gitmodules", encoding="utf-8")
+    return config[f'submodule "{name}"']["url"]
+
+
+class DependencyReachabilityTests(unittest.TestCase):
+    def test_altsign_uses_fork_relative_submodule_url(self) -> None:
+        self.assertEqual(submodule_url("Dependencies/AltSign"), "../AltSign")
 
 
 class AltSignCleanupTests(unittest.TestCase):
