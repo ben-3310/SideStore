@@ -283,16 +283,24 @@ def list_devices_json(*, cwd: Path = ROOT) -> dict[str, Any]:
 
 
 def resolve_debug_bundle_id(repo_root: Path, development_team: str | None = None) -> str:
-    values: dict[str, str] = {}
-    for line in (repo_root / "Build.xcconfig").read_text(encoding="utf-8").splitlines():
+    command = [
+        "xcodebuild",
+        "-showBuildSettings",
+        "-project",
+        "AltStore.xcodeproj",
+        "-scheme",
+        "SideStore",
+        "-configuration",
+        "Debug",
+    ]
+    if development_team:
+        command.append(f"DEVELOPMENT_TEAM={development_team}")
+    output = run_checked(command, cwd=repo_root, stream_output=False)
+    for line in output.splitlines():
         key, separator, value = line.partition("=")
-        if separator:
-            values[key.strip()] = value.strip()
-    team = development_team or values.get("DEVELOPMENT_TEAM", "")
-    organization = values.get("ORG_IDENTIFIER", "")
-    if not team or not organization:
-        raise RuntimeError("Build.xcconfig does not define the Debug signing identity")
-    return f"{organization}.SideStore.{team}"
+        if separator and key.strip() == "PRODUCT_BUNDLE_IDENTIFIER":
+            return value.strip()
+    raise RuntimeError("xcodebuild did not report PRODUCT_BUNDLE_IDENTIFIER")
 
 
 def contains_running_app(

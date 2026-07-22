@@ -5,6 +5,7 @@ import json
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from scripts.device.run_on_iphone import (
     DeviceSelectionError,
@@ -19,6 +20,7 @@ from scripts.device.run_on_iphone import (
     parse_test_summary,
     reset_build_outputs,
     redact_output,
+    resolve_debug_bundle_id,
     run_checked,
     select_device,
 )
@@ -87,6 +89,22 @@ class DeviceSelectionTests(unittest.TestCase):
 
 
 class CommandTests(unittest.TestCase):
+    def test_resolves_bundle_id_from_effective_build_settings(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "Build.xcconfig").write_text(
+                "ORG_IDENTIFIER = com.example\nDEVELOPMENT_TEAM = DEFAULTTEAM\n",
+                encoding="utf-8",
+            )
+            with patch(
+                "scripts.device.run_on_iphone.run_checked",
+                return_value="    PRODUCT_BUNDLE_IDENTIFIER = com.example.SideStore.LOCALTEAM\n",
+            ):
+                self.assertEqual(
+                    resolve_debug_bundle_id(root),
+                    "com.example.SideStore.LOCALTEAM",
+                )
+
     def test_device_build_and_test_commands_use_exact_destination_and_signing(self):
         build = build_build_for_testing_command("device-1", Path("build/device/DerivedData"))
         test = build_test_without_building_command(
