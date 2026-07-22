@@ -130,6 +130,7 @@ class XcodeTestTargetTests(unittest.TestCase):
         ).read_text()
         self.assertIn("func testLaunch() throws", launch_tests)
         self.assertIn("app.wait(for: .runningForeground, timeout: 15)", launch_tests)
+        self.assertNotIn("app.screenshot()", launch_tests)
         self.assertRegex(
             launch_tests,
             r"runsForEachTargetApplicationUIConfiguration:\s+Bool\s+\{\s+false\s+\}",
