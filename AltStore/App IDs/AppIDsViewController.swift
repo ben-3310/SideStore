@@ -424,8 +424,8 @@ private extension AppIDsViewController
                         preferredStyle: .alert
                     )
                     alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel))
-                    alert.addAction(UIAlertAction(title: NSLocalizedString("Delete", comment: ""), style: .destructive) { [weak self] _ in
-                        self?.deleteSelectedAppIDs()
+                    alert.addAction(UIAlertAction(title: NSLocalizedString("Delete", comment: ""), style: .destructive) { _ in
+                        self.deleteSelectedAppIDs()
                     })
                     self.present(alert, animated: true)
                 }

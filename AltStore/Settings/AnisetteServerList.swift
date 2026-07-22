@@ -173,7 +173,7 @@ struct AnisetteServersView: View {
                         .foregroundColor(.primary)
                         .frame(height: 60)
                         .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 5)
-                        .onChange(of: viewModel.source) { newValue in
+                        .onChange(of: viewModel.source) { _, newValue in
                             UserDefaults.standard.menuAnisetteList = newValue
 //                            viewModel.getCurrentListOfServers(refreshCallback)        // don't spam
                             viewModel.getCurrentListOfServers()

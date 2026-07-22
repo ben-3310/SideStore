@@ -169,7 +169,7 @@ struct VPNConfigurationView: View {
                 .foregroundColor(textColor ?? (editable ? .secondary : .gray))
                 .disabled(!editable)
                 .keyboardType(.numbersAndPunctuation)
-                .onChange(of: proxy.wrappedValue) { newValue in
+                .onChange(of: proxy.wrappedValue) { _, newValue in
                     guard editable else { return }
                     proxy.wrappedValue =
                         newValue.filter { "0123456789.".contains($0) }

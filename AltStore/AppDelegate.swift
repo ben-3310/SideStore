@@ -508,7 +508,7 @@ private extension AppDelegate
                 }
 
                 DispatchQueue.main.async {
-                    UIApplication.shared.applicationIconBadgeNumber = updates.count
+                    UNUserNotificationCenter.current().setBadgeCount(updates.count)
                 }
                 
                 completionHandler(.success(sources))

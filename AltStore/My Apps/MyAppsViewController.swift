@@ -13,6 +13,7 @@ import Intents
 import Combine
 import CoreData
 import UniformTypeIdentifiers
+import UserNotifications
 import AltStoreCore
 import AltSign
 import SemanticVersion
@@ -585,12 +586,12 @@ private extension MyAppsViewController
         if self.updatesDataSource.itemCount > 0
         {
             self.navigationController?.tabBarItem.badgeValue = String(describing: self.updatesDataSource.itemCount)
-            UIApplication.shared.applicationIconBadgeNumber = Int(self.updatesDataSource.itemCount)
+            UNUserNotificationCenter.current().setBadgeCount(Int(self.updatesDataSource.itemCount))
         }
         else
         {
             self.navigationController?.tabBarItem.badgeValue = nil
-            UIApplication.shared.applicationIconBadgeNumber = 0
+            UNUserNotificationCenter.current().setBadgeCount(0)
         }
         
         // Reloading collection view when not visible can mess with cell margins.
