@@ -37,6 +37,12 @@ class DeviceSelectionError(RuntimeError):
 _UUID_RE = re.compile(
     r"(?i)\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b"
 )
+_IOS_UDID_RE = re.compile(r"(?i)\b[0-9a-f]{8}-[0-9a-f]{16}\b")
+_CERTIFICATE_SHA_RE = re.compile(r"(?i)\b[0-9a-f]{40}\b")
+_TEAM_ID_RE = re.compile(r"\b(?=[A-Z0-9]{10}\b)(?=[A-Z0-9]*[A-Z])[A-Z0-9]{10}\b")
+_SIGNING_DETAIL_RE = re.compile(
+    r"(?im)^(\s*(?:Signing Identity|Provisioning Profile):\s*).*$"
+)
 
 
 def _nested(record: dict[str, Any], *path: str) -> Any:
@@ -85,7 +91,11 @@ def select_device(payload: dict[str, Any]) -> Device:
 def redact_output(text: str, device_identifier: str) -> str:
     if device_identifier:
         text = text.replace(device_identifier, "<redacted-device>")
-    return _UUID_RE.sub("<redacted-device>", text)
+    text = _UUID_RE.sub("<redacted-device>", text)
+    text = _IOS_UDID_RE.sub("<redacted-device>", text)
+    text = _CERTIFICATE_SHA_RE.sub("<redacted-certificate>", text)
+    text = _TEAM_ID_RE.sub("<redacted-team>", text)
+    return _SIGNING_DETAIL_RE.sub(r"\1<redacted-signing-detail>", text)
 
 
 def _destination(device_identifier: str) -> str:
@@ -96,6 +106,7 @@ def build_build_for_testing_command(
     device_identifier: str,
     derived_data: Path,
     allow_provisioning_updates: bool = False,
+    development_team: str | None = None,
 ) -> list[str]:
     command = [
         "xcodebuild",
@@ -113,6 +124,8 @@ def build_build_for_testing_command(
         "-derivedDataPath",
         str(derived_data),
     ]
+    if development_team:
+        command.append(f"DEVELOPMENT_TEAM={development_team}")
     if allow_provisioning_updates:
         command.append("-allowProvisioningUpdates")
     return command
@@ -120,8 +133,10 @@ def build_build_for_testing_command(
 
 def build_test_without_building_command(
     device_identifier: str,
+    derived_data: Path,
     result_bundle: Path,
     allow_provisioning_updates: bool = False,
+    development_team: str | None = None,
 ) -> list[str]:
     command = [
         "xcodebuild",
@@ -136,10 +151,14 @@ def build_test_without_building_command(
         "iphoneos",
         "-destination",
         _destination(device_identifier),
+        "-derivedDataPath",
+        str(derived_data),
         "-resultBundlePath",
         str(result_bundle),
         "-only-testing:UITests/UITestsLaunchTests/testLaunch",
     ]
+    if development_team:
+        command.append(f"DEVELOPMENT_TEAM={development_team}")
     if allow_provisioning_updates:
         command.append("-allowProvisioningUpdates")
     return command
@@ -211,11 +230,18 @@ def parse_test_summary(summary: dict[str, Any]) -> None:
         )
 
 
+def reset_build_outputs(derived_data: Path, result_bundle: Path) -> None:
+    """Удаляет только локальные артефакты этого device-flow перед чистой подписью."""
+    shutil.rmtree(derived_data, ignore_errors=True)
+    shutil.rmtree(result_bundle, ignore_errors=True)
+
+
 def run_checked(
     args: Sequence[str],
     *,
     cwd: Path = ROOT,
     redact_id: str | None = None,
+    stream_output: bool = True,
 ) -> str:
     """Run one external tool and stream only redacted output."""
     process = subprocess.Popen(
@@ -230,8 +256,10 @@ def run_checked(
     assert process.stdout is not None
     for line in process.stdout:
         safe_line = redact_output(line, redact_id or "")
-        output.append(safe_line)
-        print(safe_line, end="", file=sys.stderr, flush=True)
+        output.append(line)
+        if stream_output:
+            print(safe_line, end="", file=sys.stderr, flush=True)
+    process.stdout.close()
     return_code = process.wait()
     if return_code != 0:
         raise RuntimeError(f"{args[0]} failed with exit code {return_code}")
@@ -248,28 +276,39 @@ def list_devices_json(*, cwd: Path = ROOT) -> dict[str, Any]:
         return json.loads(output_path.read_text(encoding="utf-8"))
 
 
-def resolve_debug_bundle_id(repo_root: Path) -> str:
+def resolve_debug_bundle_id(repo_root: Path, development_team: str | None = None) -> str:
     values: dict[str, str] = {}
     for line in (repo_root / "Build.xcconfig").read_text(encoding="utf-8").splitlines():
         key, separator, value = line.partition("=")
         if separator:
             values[key.strip()] = value.strip()
-    team = values.get("DEVELOPMENT_TEAM", "")
+    team = development_team or values.get("DEVELOPMENT_TEAM", "")
     organization = values.get("ORG_IDENTIFIER", "")
     if not team or not organization:
         raise RuntimeError("Build.xcconfig does not define the Debug signing identity")
     return f"{organization}.SideStore.{team}"
 
 
-def _contains_bundle_identifier(value: Any, bundle_identifier: str) -> bool:
+def contains_running_app(
+    value: Any,
+    bundle_identifier: str,
+    executable_name: str,
+) -> bool:
     if isinstance(value, dict):
         return any(
-            _contains_bundle_identifier(child, bundle_identifier)
+            contains_running_app(child, bundle_identifier, executable_name)
             for child in value.values()
         )
     if isinstance(value, list):
-        return any(_contains_bundle_identifier(child, bundle_identifier) for child in value)
-    return value == bundle_identifier
+        return any(
+            contains_running_app(child, bundle_identifier, executable_name)
+            for child in value
+        )
+    if value == bundle_identifier:
+        return True
+    return isinstance(value, str) and value.endswith(
+        f"/{executable_name}.app/{executable_name}"
+    )
 
 
 def _process_is_running(device_identifier: str, bundle_identifier: str, *, cwd: Path) -> bool:
@@ -279,26 +318,34 @@ def _process_is_running(device_identifier: str, bundle_identifier: str, *, cwd: 
             build_process_info_command(device_identifier, output_path),
             cwd=cwd,
             redact_id=device_identifier,
+            stream_output=False,
         )
-        return _contains_bundle_identifier(
+        return contains_running_app(
             json.loads(output_path.read_text(encoding="utf-8")),
             bundle_identifier,
+            "SideStore",
         )
 
 
-def run_device_flow(repo_root: Path, allow_provisioning_updates: bool = False) -> None:
+def run_device_flow(
+    repo_root: Path,
+    allow_provisioning_updates: bool = False,
+    development_team: str | None = None,
+) -> None:
     device = select_device(list_devices_json(cwd=repo_root))
     derived_data = repo_root / "build/device/DerivedData"
     result_bundle = repo_root / "build/device/SideStore-Device.xcresult"
     app_path = derived_data / "Build/Products/Debug-iphoneos/SideStore.app"
-    bundle_identifier = resolve_debug_bundle_id(repo_root)
+    bundle_identifier = resolve_debug_bundle_id(repo_root, development_team)
     derived_data.parent.mkdir(parents=True, exist_ok=True)
+    reset_build_outputs(derived_data, result_bundle)
 
     run_checked(
         build_build_for_testing_command(
             device.identifier,
             derived_data,
             allow_provisioning_updates,
+            development_team,
         ),
         cwd=repo_root,
         redact_id=device.identifier,
@@ -307,12 +354,13 @@ def run_device_flow(repo_root: Path, allow_provisioning_updates: bool = False) -
         raise RuntimeError("xcodebuild completed without producing SideStore.app")
     run_checked(build_codesign_verify_command(app_path), cwd=repo_root, redact_id=device.identifier)
 
-    shutil.rmtree(result_bundle, ignore_errors=True)
     run_checked(
         build_test_without_building_command(
             device.identifier,
+            derived_data,
             result_bundle,
             allow_provisioning_updates,
+            development_team,
         ),
         cwd=repo_root,
         redact_id=device.identifier,
@@ -347,10 +395,18 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="allow Xcode to refresh existing provisioning profiles",
     )
+    parser.add_argument(
+        "--development-team",
+        help="override the project team with a locally installed development team",
+    )
     parser.add_argument("--repo-root", type=Path, default=ROOT)
     args = parser.parse_args(argv)
     try:
-        run_device_flow(args.repo_root.resolve(), args.allow_provisioning_updates)
+        run_device_flow(
+            args.repo_root.resolve(),
+            args.allow_provisioning_updates,
+            args.development_team,
+        )
     except (DeviceSelectionError, RuntimeError, OSError, json.JSONDecodeError) as error:
         print(f"Physical device flow failed: {error}", file=sys.stderr)
         return 1
