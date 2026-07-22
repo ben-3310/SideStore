@@ -14,6 +14,7 @@ jobs:
     runs-on: [self-hosted, macOS, ARM64, sidestore, xcode-27-0, ios-27]
     timeout-minutes: 90
     env:
+      SIMULATOR_DEVICE: "iPhone 13"
       SIMULATOR_OS: "27.0"
 
     steps:
@@ -27,6 +28,7 @@ jobs:
           test "$DEVELOPER_DIR" = "/Applications/Xcode-beta.app/Contents/Developer"
           xcodebuild -version | grep -Fx 'Xcode 27.0'
           xcrun simctl list runtimes | grep -F "iOS 27.0 (27.0"
+          xcrun simctl list devicetypes | grep -F "iPhone 13"
           command -v ldid
           command -v xcbeautify
           command -v wget
@@ -35,6 +37,42 @@ jobs:
         run: |
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
             -s scripts/ci -p 'test_*.py' -v
+
+      - name: Ensure iPhone 13 iOS 27 Simulator
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+
+          runtime_id = "com.apple.CoreSimulator.SimRuntime.iOS-27-0"
+          device_type = "com.apple.CoreSimulator.SimDeviceType.iPhone-13"
+          devices = json.loads(
+              subprocess.check_output(["xcrun", "simctl", "list", "devices", "-j"])
+          )["devices"].get(runtime_id, [])
+          udid = next(
+              (
+                  device["udid"]
+                  for device in devices
+                  if device["name"] == os.environ["SIMULATOR_DEVICE"]
+                  and device["isAvailable"]
+              ),
+              None,
+          )
+          if udid is None:
+              udid = subprocess.check_output(
+                  [
+                      "xcrun",
+                      "simctl",
+                      "create",
+                      os.environ["SIMULATOR_DEVICE"],
+                      device_type,
+                      runtime_id,
+                  ],
+                  text=True,
+              ).strip()
+          print(f"IOS27_SIMULATOR_READY {runtime_id} {udid}")
+          PY
 
       - name: Archive compatibility build
         run: python3 scripts/ci/workflow.py build
@@ -46,6 +84,7 @@ jobs:
         run: |
           python3 - <<'PY'
           import json
+          import os
           import subprocess
 
           runtime_id = "com.apple.CoreSimulator.SimRuntime.iOS-27-0"
@@ -55,7 +94,8 @@ jobs:
           udid = next(
               device["udid"]
               for device in devices
-              if device["name"] == "iPhone 17 Pro" and device["isAvailable"]
+              if device["name"] == os.environ["SIMULATOR_DEVICE"]
+              and device["isAvailable"]
           )
 
           try:

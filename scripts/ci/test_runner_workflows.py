@@ -42,8 +42,13 @@ class RunnerWorkflowTests(unittest.TestCase):
         )
         self.assertNotIn("pull_request:", text)
         self.assertIn('SIMULATOR_OS: "27.0"', text)
+        self.assertIn('SIMULATOR_DEVICE: "iPhone 13"', text)
         self.assertIn("xcodebuild -version | grep -Fx 'Xcode 27.0'", text)
         self.assertIn('grep -F "iOS 27.0 (27.0', text)
+        self.assertIn(
+            'device_type = "com.apple.CoreSimulator.SimDeviceType.iPhone-13"',
+            text,
+        )
         self.assertIn("python3 scripts/ci/workflow.py build", text)
         self.assertIn("python3 scripts/ci/workflow.py tests-build", text)
         self.assertIn(
@@ -97,10 +102,12 @@ class RunnerWorkflowTests(unittest.TestCase):
     def test_simulator_destination_can_be_pinned_by_runner(self) -> None:
         makefile = (REPO_ROOT / "Makefile").read_text()
 
+        self.assertIn("SIMULATOR_DEVICE ?= iPhone 17 Pro", makefile)
         self.assertIn("SIMULATOR_OS ?= latest", makefile)
         self.assertNotIn("OS=26.0", makefile)
         self.assertNotIn("OS=latest", makefile)
         self.assertEqual(makefile.count("OS=$(SIMULATOR_OS)"), 3)
+        self.assertEqual(makefile.count("name=$(SIMULATOR_DEVICE)"), 3)
 
 
 if __name__ == "__main__":
