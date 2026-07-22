@@ -17,7 +17,7 @@
       "steps": [
         {
           "name": "validate_version",
-          "run": "test -n \"$VERSION\" || { echo \"VERSION is required\" >&2; exit 2; }"
+          "run": "test -n \"$VERSION\" && printf '%s' \"$VERSION\" | grep -Eq '^[0-9]+([.][0-9]+){1,2}$' || { echo \"VERSION must be a numeric dotted version\" >&2; exit 2; }"
         },
         {
           "name": "resolve_next_build",
@@ -28,7 +28,7 @@
         },
         {
           "name": "archive",
-          "run": "asc xcode archive --project \"$PROJECT_PATH\" --scheme \"$SCHEME\" --configuration \"$CONFIGURATION\" --archive-path \".asc/artifacts/SideStore-$VERSION-${steps.resolve_next_build.BUILD_NUMBER}.xcarchive\" --clean --overwrite --xcodebuild-flag=-destination --xcodebuild-flag=generic/platform=iOS --xcodebuild-flag=-allowProvisioningUpdates --xcodebuild-flag=MARKETING_VERSION=$VERSION --xcodebuild-flag=CURRENT_PROJECT_VERSION=${steps.resolve_next_build.BUILD_NUMBER} --output json"
+          "run": "asc xcode archive --project \"$PROJECT_PATH\" --scheme \"$SCHEME\" --configuration \"$CONFIGURATION\" --archive-path \".asc/artifacts/SideStore-$VERSION-${steps.resolve_next_build.BUILD_NUMBER}.xcarchive\" --clean --overwrite --xcodebuild-flag=-destination --xcodebuild-flag=generic/platform=iOS --xcodebuild-flag=-allowProvisioningUpdates --xcodebuild-flag=\"MARKETING_VERSION=$VERSION\" --xcodebuild-flag=CURRENT_PROJECT_VERSION=${steps.resolve_next_build.BUILD_NUMBER} --output json"
         },
         {
           "name": "export",

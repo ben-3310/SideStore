@@ -1,5 +1,7 @@
 import json
+import os
 import plistlib
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -47,6 +49,36 @@ class ASCWorkflowTests(unittest.TestCase):
         serialized = json.dumps(document)
         self.assertNotIn("--submit", serialized)
         self.assertNotIn("--confirm", serialized)
+
+    def test_version_validation_rejects_unsafe_input_and_quotes_archive_flag(self) -> None:
+        workflow = self.load_workflow()["workflows"]["testflight_internal"]
+        steps = {step["name"]: step["run"] for step in workflow["steps"]}
+
+        for version in ("1.0", "1.0.0"):
+            result = subprocess.run(
+                ["/bin/sh", "-c", steps["validate_version"]],
+                capture_output=True,
+                env={**os.environ, "VERSION": version},
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+        unsafe_result = subprocess.run(
+            ["/bin/sh", "-c", steps["validate_version"]],
+            capture_output=True,
+            env={**os.environ, "VERSION": "1.0 unsafe"},
+            text=True,
+        )
+        self.assertNotEqual(unsafe_result.returncode, 0)
+
+        self.assertIn(
+            '--xcodebuild-flag="MARKETING_VERSION=$VERSION"',
+            steps["archive"],
+        )
+        self.assertNotIn(
+            "--xcodebuild-flag=MARKETING_VERSION=$VERSION",
+            steps["archive"],
+        )
 
     def test_export_options_use_automatic_app_store_connect_signing(self) -> None:
         with EXPORT_OPTIONS_PATH.open("rb") as file:
