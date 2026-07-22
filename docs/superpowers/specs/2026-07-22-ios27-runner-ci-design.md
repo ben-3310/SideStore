@@ -59,6 +59,13 @@ shared schemes и `.xctestplan` снова разрешались без их п
 возвращаются необходимые source membership, build phases, зависимости от
 приложения и параметры test host/UI test target application.
 
+Вместе с targets восстанавливаются удалённые позднейшим cleanup-коммитом
+`xcconfigs/UITests.xcconfig` и `xcconfigs/DataStructureTests.xcconfig`. Каждый
+файл наследует актуальный `Build.xcconfig` и задаёт отдельный bundle identifier
+для тестового bundle. Нельзя оставлять в project ссылки на отсутствующие
+base-configuration файлы или заменять тестовые bundle ID идентификатором
+приложения.
+
 До изменения Xcode-проекта добавляются структурные regression-тесты, которые
 должны сначала зафиксировать проблему: требуемые PBX targets, продукты,
 configuration lists и ссылки test plans отсутствуют или неразрешимы.
