@@ -56,6 +56,8 @@ SideStore/em_proxy/*
 
 # misc
 **/output.txt
+**/__pycache__/
+**/*.pyc
 SideStore/.skip-prebuilt-fetch-minimuxer
 SideStore/.skip-prebuilt-fetch-em_proxy
 
