@@ -56,6 +56,24 @@ class DependencyLayoutTests(unittest.TestCase):
 
         verify_dependencies(root)
 
+    def test_rejects_absolute_symlink_to_external_directory(self) -> None:
+        external = make_dependencies(self.tmpdir / "SideStore_Dependencies")
+        root = self.tmpdir / "SideStore"
+        root.mkdir()
+        (root / "Dependencies").symlink_to(external, target_is_directory=True)
+
+        with self.assertRaisesRegex(DependencyLayoutError, "must target"):
+            verify_dependencies(root)
+
+    def test_rejects_symlink_to_another_relative_directory(self) -> None:
+        make_dependencies(self.tmpdir / "Other_Dependencies")
+        root = self.tmpdir / "SideStore"
+        root.mkdir()
+        (root / "Dependencies").symlink_to(Path("../Other_Dependencies"), target_is_directory=True)
+
+        with self.assertRaisesRegex(DependencyLayoutError, "must target"):
+            verify_dependencies(root)
+
     def test_rejects_missing_dependencies_path(self) -> None:
         with self.assertRaisesRegex(DependencyLayoutError, "missing Dependencies"):
             verify_dependencies(self.tmpdir)

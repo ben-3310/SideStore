@@ -15,6 +15,13 @@ class DependencyLayoutError(RuntimeError):
 def verify_dependencies(root: Path) -> None:
     """Ensure ``root/Dependencies`` provides the required source directories."""
     dependencies = root / "Dependencies"
+    if (
+        dependencies.is_symlink()
+        and dependencies.readlink() != Path("../SideStore_Dependencies")
+    ):
+        raise DependencyLayoutError(
+            "Dependencies symlink must target ../SideStore_Dependencies"
+        )
     if not dependencies.exists():
         raise DependencyLayoutError(
             "missing Dependencies; initialise submodules or create the relative link"
