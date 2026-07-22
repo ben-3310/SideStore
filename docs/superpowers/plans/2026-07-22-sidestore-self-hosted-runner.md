@@ -13,6 +13,8 @@
 - Не изменять и не останавливать существующий runner `china_link` под `ben`.
 - Не добавлять `github-runner-sidestore` в `admin` и не выдавать ему `sudo`.
 - Не направлять `pull_request` или иной недоверенный код на постоянный self-hosted runner.
+- Требовать approval каждого внешнего contributor и перед approval проверять
+  изменения `.github/workflows/**`, потому что PR может изменить `runs-on`.
 - Не выводить пароли, registration token, закрытый SSH-ключ и signing secrets.
 - Использовать Xcode 26.6 и labels `self-hosted`, `macOS`, `ARM64`, `sidestore`, `xcode-26-6`.
 - Не публиковать workflow и коммиты без отдельного разрешения пользователя.
@@ -581,6 +583,7 @@ actions-runner/.credentials* are mode 0600
 runner process UID is github-runner-sidestore
 registration token is absent from plist, .env and logs
 pr.yml still uses macos-26
+fork-pr-contributor-approval is all_external_contributors
 no push occurred
 ```
 

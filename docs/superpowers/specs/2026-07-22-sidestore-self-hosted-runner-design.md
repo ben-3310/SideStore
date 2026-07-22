@@ -25,6 +25,12 @@ runner `china_link`, работающий под пользователем `ben
   Xcode 26.6;
 - Linux-задачи `attach_build_products.yml` и `triage.yml`.
 
+Поскольку внешний PR может изменить собственный `runs-on`, repository setting
+`fork-pr-contributor-approval` установлен в `all_external_contributors`.
+Maintainer перед одобрением обязан проверить изменения `.github/workflows/**`;
+простого наличия hosted `runs-on` в текущей ветке недостаточно для защиты
+постоянного runner публичного репозитория.
+
 Публикация изменений workflow в GitHub выполняется только после отдельного
 разрешения пользователя. До публикации runner может быть зарегистрирован и
 проверен ручным безопасным заданием или локальным smoke-test.
@@ -168,6 +174,8 @@ Simulator destinations в `Makefile` используют `OS=latest`, чтоб�
 9. Существующий runner `china_link` остаётся `online` и работает под `ben`.
 10. До публикации workflow не выполняется реальная маршрутизация production
     nightly/stable jobs на новый runner.
+11. GitHub API возвращает `all_external_contributors` для approval policy
+    внешних pull request.
 
 ## Ошибки и остановка
 
