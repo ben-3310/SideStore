@@ -104,10 +104,13 @@ class RunnerWorkflowTests(unittest.TestCase):
 
         self.assertIn("SIMULATOR_DEVICE ?= iPhone 17 Pro", makefile)
         self.assertIn("SIMULATOR_OS ?= latest", makefile)
+        self.assertIn(
+            "SIMULATOR_DESTINATION ?= platform=iOS Simulator,name=$(SIMULATOR_DEVICE),OS=$(SIMULATOR_OS)",
+            makefile,
+        )
         self.assertNotIn("OS=26.0", makefile)
         self.assertNotIn("OS=latest", makefile)
-        self.assertEqual(makefile.count("OS=$(SIMULATOR_OS)"), 3)
-        self.assertEqual(makefile.count("name=$(SIMULATOR_DEVICE)"), 3)
+        self.assertEqual(makefile.count("-destination '$(SIMULATOR_DESTINATION)'"), 3)
 
 
 if __name__ == "__main__":
