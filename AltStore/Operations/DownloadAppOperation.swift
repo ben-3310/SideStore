@@ -13,7 +13,7 @@ import AltStoreCore
 import AltSign
 
 @objc(DownloadAppOperation)
-final class DownloadAppOperation: ResultOperation<ALTApplication>, OperationLogging {
+final class DownloadAppOperation: ResultOperation<ALTApplication>, OperationLogging, @unchecked Sendable {
     
     @Managed
     private(set) var app: AppProtocol

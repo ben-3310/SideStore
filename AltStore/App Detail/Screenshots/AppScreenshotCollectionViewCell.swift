@@ -77,10 +77,11 @@ class AppScreenshotCollectionViewCell: UICollectionViewCell
         fatalError("init(coder:) has not been implemented")
     }
     
+    @available(iOS, deprecated: 17.0)
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?)
     {
         super.traitCollectionDidChange(previousTraitCollection)
-        
+
         self.updateTraits()
     }
     

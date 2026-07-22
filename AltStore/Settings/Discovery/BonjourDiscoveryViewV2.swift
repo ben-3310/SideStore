@@ -3,7 +3,7 @@
 //  AltStore
 //
 //  Created by Magesh K on 4/7/26.
-//  Copyright © 2026 SideStore. All rights reserved.
+//  Copyright © 2026 ben4Store. All rights reserved.
 //
 
 import SwiftUI
@@ -64,7 +64,7 @@ struct BonjourDiscoveryViewV2: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                 
-                Text("**Settings -> apps -> SideStore -> LocalNetworkAccess = toggle on**")
+                Text("**Settings -> apps -> ben4Store -> LocalNetworkAccess = toggle on**")
                     .font(.caption.bold())
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -152,7 +152,7 @@ struct ServiceTypesViewV2: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                 
-                Text("**Settings -> apps -> SideStore -> LocalNetworkAccess = toggle on**")
+                Text("**Settings -> apps -> ben4Store -> LocalNetworkAccess = toggle on**")
                     .font(.caption.bold())
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -278,7 +278,7 @@ struct ServiceInstancesViewV2: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                 
-                Text("**Settings -> apps -> SideStore -> LocalNetworkAccess = toggle on**")
+                Text("**Settings -> apps -> ben4Store -> LocalNetworkAccess = toggle on**")
                     .font(.caption.bold())
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)

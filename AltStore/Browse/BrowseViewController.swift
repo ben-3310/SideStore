@@ -573,7 +573,7 @@ private extension BrowseViewController
             }
             else
             {
-                let group = await AppManager.shared.installAsync(app, presentingViewController: self, completionHandler: finish(_:))
+                let group = await AppManager.shared.installAsync(app, presentingViewController: self, completionHandler: { result in Task { @MainActor in finish(result) } })
                 progressUpdateHandler(group.progress)
             }
         }

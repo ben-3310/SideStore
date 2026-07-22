@@ -186,7 +186,7 @@ final class ResignAppOperation: ResultOperation<ALTApplication>, OperationLoggin
         try self.removeMissingAppExtensionReferences(from: appBundle)
         
         if let directory = appBundle.builtInPlugInsURL, let enumerator = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: nil, options: [.skipsSubdirectoryDescendants]) {
-            for case let fileURL as URL in enumerator {
+            while let fileURL = enumerator.nextObject() as? URL {
                 // for both sim and device, in debug mode builds, remove the tests bundles (if any)
                 #if DEBUG
                 guard !fileURL.lastPathComponent.lowercased().contains(".xctest") else {

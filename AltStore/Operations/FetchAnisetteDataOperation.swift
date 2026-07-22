@@ -13,10 +13,10 @@ import Starscream
 import AltStoreCore
 import AltSign
 
-class ANISETTE_VERBOSITY: Operation {} // dummy tag iface
+class ANISETTE_VERBOSITY: Operation, @unchecked Sendable {} // dummy tag iface
 
 @objc(FetchAnisetteDataOperation)
-final class FetchAnisetteDataOperation: ResultOperation<ALTAnisetteData>, WebSocketDelegate, OperationLogging {
+final class FetchAnisetteDataOperation: ResultOperation<ALTAnisetteData>, WebSocketDelegate, OperationLogging, @unchecked Sendable {
 
     let context: OperationContext
     var socket: WebSocket!
@@ -241,27 +241,31 @@ final class FetchAnisetteDataOperation: ResultOperation<ALTAnisetteData>, WebSoc
         self.debugLog("Alerting user about outdated server")
         
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            let alert = UIAlertController(title: "WARNING: Outdated anisette server", message: "We've detected you are using an older anisette server. Using this server has a higher likelihood of locking your account and causing other issues. Are you sure you want to continue?", preferredStyle: UIAlertController.Style.alert)
-            alert.addAction(UIAlertAction(title: "Continue", style: UIAlertAction.Style.destructive, handler: { action in
-                self.verboseLog("Fetching anisette via V1")
-                UserDefaults.shared.trustedServerURL = AnisetteManager.currentURLString
-                Task {
-                    do {
-                        try await self.fetchAnisetteV1()
-                        continuation.resume()
-                    } catch {
-                        continuation.resume(throwing: error)
-                    }
-                }
-            }))
-            alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertAction.Style.cancel, handler: { action in
-                self.debugLog("Cancelled anisette operation")
-                continuation.resume(throwing: OperationError.cancelled)
-            }))
-     
-            let keyWindow = UIApplication.shared.windows.filter { $0.isKeyWindow }.first
-     
             Task { @MainActor in
+                let alert = UIAlertController(title: "WARNING: Outdated anisette server", message: "We've detected you are using an older anisette server. Using this server has a higher likelihood of locking your account and causing other issues. Are you sure you want to continue?", preferredStyle: UIAlertController.Style.alert)
+                alert.addAction(UIAlertAction(title: "Continue", style: UIAlertAction.Style.destructive, handler: { action in
+                    self.verboseLog("Fetching anisette via V1")
+                    UserDefaults.shared.trustedServerURL = AnisetteManager.currentURLString
+                    Task {
+                        do {
+                            try await self.fetchAnisetteV1()
+                            continuation.resume()
+                        } catch {
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                }))
+                alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertAction.Style.cancel, handler: { action in
+                    self.debugLog("Cancelled anisette operation")
+                    continuation.resume(throwing: OperationError.cancelled)
+                }))
+
+                let keyWindow = UIApplication.shared.connectedScenes
+                    .filter { $0.activationState == .foregroundActive }
+                    .compactMap { $0 as? UIWindowScene }
+                    .first?.windows
+                    .first { $0.isKeyWindow }
+
                 if let presentingController = keyWindow?.rootViewController?.presentedViewController {
                     presentingController.present(alert, animated: true)
                 } else {

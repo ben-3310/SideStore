@@ -3,7 +3,7 @@
 //  AltStore
 //
 //  Created by Magesh K on 2026-07-03.
-//  Copyright © 2026 SideStore. All rights reserved.
+//  Copyright © 2026 ben4Store. All rights reserved.
 //
 
 import AltSign
@@ -41,6 +41,6 @@ struct GroupedCertificates: Identifiable {
     let certificates: [ALTCertificate]
 }
 
-extension ALTCertificate: Identifiable {
+extension ALTCertificate: @retroactive Identifiable {
     public var id: String { serialNumber }
 }

@@ -12,7 +12,7 @@ import AltStoreCore
 import AltSign
 
 @objc(RemoveAppExtensionsOperation)
-final class RemoveAppExtensionsOperation: ResultOperation<Void>, OperationLogging {
+final class RemoveAppExtensionsOperation: ResultOperation<Void>, OperationLogging, @unchecked Sendable {
 
     let context: AppOperationContext
     let localAppExtensions: Set<ALTApplication>?

@@ -13,7 +13,7 @@ import CoreData
 
 
 @objc(FetchProvisioningProfilesOperation)
-class FetchProvisioningProfilesOperation: ResultOperation<[String: ALTProvisioningProfile]>, OperationLogging {
+class FetchProvisioningProfilesOperation: ResultOperation<[String: ALTProvisioningProfile]>, OperationLogging, @unchecked Sendable {
 
     let context: AppOperationContext
     
@@ -366,9 +366,9 @@ class FetchProvisioningProfilesInstallOperation: FetchProvisioningProfilesOperat
         }
         
         if app.isAltStoreApp {
-            verboseLog("Application groups before modifying for SideStore: \(applicationGroups)")
+            verboseLog("Application groups before modifying for ben4Store: \(applicationGroups)")
             
-            // Remove app groups that contain AltStore since they can be problematic (cause SideStore to expire early)
+            // Remove app groups that contain AltStore since they can be problematic (cause ben4Store to expire early)
             for (index, group) in applicationGroups.enumerated() {
                 if group.contains("AltStore") {
                     verboseLog("Removing application group: \(group)")
@@ -396,16 +396,17 @@ class FetchProvisioningProfilesInstallOperation: FetchProvisioningProfilesOperat
             }
         }
         verboseLog("Application groups: \(applicationGroups)")
-        
+        let frozenGroups = applicationGroups
+
         return try await TaskChainSerializer.shared.serialize {
             // Ensure we're not concurrently fetching and updating app groups,
             // which can lead to race conditions such as adding an app group twice.
             do {
                 let fetchedGroups = try await ALTAppleAPI.shared.fetchAppGroups(for: team, session: session)
-                
+
                 var groups = [ALTAppGroup]()
-                
-                for groupIdentifier in applicationGroups {
+
+                for groupIdentifier in frozenGroups {
                     let adjustedGroupIdentifier = groupIdentifier + "." + team.identifier
                     
                     if let group = fetchedGroups.first(where: { $0.groupIdentifier == adjustedGroupIdentifier }) {
@@ -430,7 +431,6 @@ class FetchProvisioningProfilesInstallOperation: FetchProvisioningProfilesOperat
                 
                 return appID
             } catch {
-                let groupIDs = applicationGroups.map { $0 + "." + team.identifier }
                 self.debugLog("Failed to assign/create App Groups for App ID \(appID.bundleIdentifier): \(error.localizedDescription)")
                 throw error
             }

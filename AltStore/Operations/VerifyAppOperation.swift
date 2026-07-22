@@ -30,7 +30,7 @@ extension VerifyAppOperation {
 }
 
 @objc(VerifyAppOperation)
-final class VerifyAppOperation: ResultOperation<Void>, OperationLogging {
+final class VerifyAppOperation: ResultOperation<Void>, OperationLogging, @unchecked Sendable {
 
     let permissionsMode: PermissionReviewMode
     let context: InstallAppOperationContext

@@ -1,6 +1,6 @@
 //
 //  AppConstants.swift
-//  SideStore
+//  ben4Store
 //
 //  Created by Joseph Mattiello on 11/7/22.
 //  Copyright © 2022 Riley Testut. All rights reserved.

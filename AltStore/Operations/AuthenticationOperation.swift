@@ -11,7 +11,7 @@ import Foundation
 import Network
 import CoreData
 import AltStoreCore
-import AltSign
+@preconcurrency import AltSign
 
 private extension UIColor {
     static let altInvertedPrimary = UIColor(named: "SettingsHighlighted")!
@@ -43,7 +43,7 @@ enum AuthenticationErrorCode: Int, ALTErrorEnum, CaseIterable {
 }
 
 @objc(AuthenticationOperation)
-final class AuthenticationOperation: ResultOperation<(ALTTeam, ALTCertificate?, ALTAppleAPISession)>, OperationLogging {
+final class AuthenticationOperation: ResultOperation<(ALTTeam, ALTCertificate?, ALTAppleAPISession)>, OperationLogging, @unchecked Sendable {
 
     let context: AuthenticatedOperationContext
     
@@ -580,7 +580,7 @@ final class AuthenticationOperation: ResultOperation<(ALTTeam, ALTCertificate?, 
     
     private func requestCertificate(for team: ALTTeam, session: ALTAppleAPISession) async throws -> ALTCertificate {
         let deviceName = await UIDevice.current.name
-        let machineName: String = "SideStore - \(team.account.firstName)'s \(deviceName)"
+        let machineName: String = "ben4Store - \(team.account.firstName)'s \(deviceName)"
         do {
             let certificate = try await ALTAppleAPI.shared.addCertificate(machineName: machineName, to: team, session: session)
             guard let privateKey = certificate.privateKey else {
@@ -620,8 +620,9 @@ final class AuthenticationOperation: ResultOperation<(ALTTeam, ALTCertificate?, 
     
     @MainActor
     private func replaceCertificate(ourCertificates: [ALTCertificate], for team: ALTTeam, session: ALTAppleAPISession) async throws -> ALTCertificate {
-        let filteredCertificates = ourCertificates.filter { a in
-            a.machineName?.starts(with: "SideStore") == true || a.machineName?.starts(with: "AltStore") == true
+        let filteredCertificates = ourCertificates.filter { certificate in
+            guard let machineName = certificate.machineName else { return false }
+            return ["ben4Store", "SideStore", "AltStore"].contains { machineName.starts(with: $0) }
         }
         
         if filteredCertificates.isEmpty {
@@ -675,7 +676,7 @@ final class AuthenticationOperation: ResultOperation<(ALTTeam, ALTCertificate?, 
                 if teamType == .free {
                     let warningAlert = UIAlertController(
                         title: NSLocalizedString("Warning", comment: ""),
-                        message: NSLocalizedString("SideStore cannot manage the existing certificate without owning its private key. The apps signed with the existing certificate will expire soon unless they are resigned and renewed explicitly by SideStore.", comment: ""),
+                        message: NSLocalizedString("ben4Store cannot manage the existing certificate without owning its private key. The apps signed with the existing certificate will expire soon unless they are resigned and renewed explicitly by ben4Store.", comment: ""),
                         preferredStyle: .alert
                     )
                     warningAlert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default) { _ in

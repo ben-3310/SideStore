@@ -3,7 +3,7 @@
 //  AltStore
 //
 //  Created by Magesh K on 29/12/24.
-//  Copyright © 2024 SideStore. All rights reserved.
+//  Copyright © 2024 ben4Store. All rights reserved.
 //
 import SwiftUI
 
@@ -203,7 +203,7 @@ public struct ConsoleLogView: View {
 
                   TextField("Search", text: $searchText)
                       .textFieldStyle(RoundedBorderTextFieldStyle())
-                      .onChange(of: searchText) { newValue in
+                      .onChange(of: searchText) { _, newValue in
                           viewModel.searchTerm = newValue
                           viewModel.performSearch()
                       }
@@ -266,14 +266,14 @@ public struct ConsoleLogView: View {
                                 )
                         }
                     }
-                    .onChange(of: scrollToIndex) { newIndex in
+                    .onChange(of: scrollToIndex) { _, newIndex in
                         if let index = newIndex {
                             withAnimation {
                                 proxy.scrollTo(index, anchor: .center)
                             }
                         }
                     }
-                    .onChange(of: scrollToBottom) { _ in
+                    .onChange(of: scrollToBottom) { _, _ in
                         viewModel.logLines.indices.last.map { last in
                             proxy.scrollTo(last, anchor: .bottom)
                         }

@@ -2,14 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 	<key>ALTAnisetteURL</key>
 	<string>https://ani.sidestore.io</string>
 	<key>ALTAppGroups</key>
 	<array>
 		<string>group.$(APP_GROUP_IDENTIFIER)</string>
 	</array>
+	<key>ALTBundleIdentifier</key>
+	<string>$(MAIN_BUNDLE_IDENTIFIER)</string>
 	<key>ALTDeviceID</key>
 	<string>00008120-001270DA119B401E</string>
 	<key>ALTPairingFile</key>
@@ -18,6 +18,8 @@
 	<string>1F7D5B55-79CE-4546-A029-D4DDC4AF3B6D</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>ben4Store</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -52,8 +54,6 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
-	<key>CFBundleDisplayName</key>
-	<string>ben4Store</string>
 	<key>CFBundleName</key>
 	<string>ben4Store</string>
 	<key>CFBundlePackageType</key>
@@ -66,7 +66,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>SideStore General</string>
+			<string>ben4Store General</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>sidestore</string>
@@ -76,7 +76,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>SideStore Backup</string>
+			<string>ben4Store Backup</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>sidestore-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
@@ -90,6 +90,8 @@
 		<string>RefreshAllIntent</string>
 		<string>ViewAppIntent</string>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>sidestore-com.SideStore.SideStore</string>
@@ -167,7 +169,7 @@
 		<string>_wss._tcp</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>SideStore can use local network access to discover Bonjour (mDNS) services on your network. This is not required for core functionality.</string>
+	<string>ben4Store can use local network access to discover Bonjour (mDNS) services on your network. This is not required for core functionality.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>RefreshAllIntent</string>

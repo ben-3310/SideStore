@@ -9,11 +9,12 @@
 import UIKit
 import SwiftUI
 import MobileCoreServices
-import Intents
+@preconcurrency import Intents
 import Combine
 import CoreData
 import UniformTypeIdentifiers
-import AltStoreCore
+import UserNotifications
+@preconcurrency import AltStoreCore
 import AltSign
 import SemanticVersion
 
@@ -267,7 +268,7 @@ private extension MyAppsViewController
             
             var versionText = latestSupportedVersion.localizedVersion
 
-            // If the app is SideStore itself, remove the build number to save space
+            // If the app is ben4Store itself, remove the build number to save space
             if app.bundleIdentifier == Bundle.Info.appbundleIdentifier,
                let version = SemanticVersion(latestSupportedVersion.version)
             {
@@ -585,12 +586,12 @@ private extension MyAppsViewController
         if self.updatesDataSource.itemCount > 0
         {
             self.navigationController?.tabBarItem.badgeValue = String(describing: self.updatesDataSource.itemCount)
-            UIApplication.shared.applicationIconBadgeNumber = Int(self.updatesDataSource.itemCount)
+            UNUserNotificationCenter.current().setBadgeCount(Int(self.updatesDataSource.itemCount))
         }
         else
         {
             self.navigationController?.tabBarItem.badgeValue = nil
-            UIApplication.shared.applicationIconBadgeNumber = 0
+            UNUserNotificationCenter.current().setBadgeCount(0)
         }
         
         // Reloading collection view when not visible can mess with cell margins.
@@ -824,9 +825,12 @@ private extension MyAppsViewController
             }
             
             let interaction = INInteraction.refreshAllApps()
-            interaction.donate { (error) in
-                guard let error = error else { return }
-                debugLog("Failed to donate intent \(interaction.intent). \(error)")
+            Task {
+                do {
+                    try await interaction.donate()
+                } catch {
+                    debugLog("Failed to donate intent \(interaction.intent). \(error)")
+                }
             }
         }
     }
@@ -1302,7 +1306,7 @@ private extension MyAppsViewController
     
     func remove(_ installedApp: InstalledApp)
     {
-        let title = String(format: NSLocalizedString("Remove “%@” from SideStore?", comment: ""), installedApp.name)
+        let title = String(format: NSLocalizedString("Remove “%@” from ben4Store?", comment: ""), installedApp.name)
         let message: String
         
         if UserDefaults.standard.isLegacyDeactivationSupported
@@ -1338,7 +1342,7 @@ private extension MyAppsViewController
             guard await isMinimuxerReady else { return }
 
             let title = NSLocalizedString("Start Backup?", comment: "")
-            let message = NSLocalizedString("This will replace any previous backups. Please leave SideStore open until the backup is complete.", comment: "")
+            let message = NSLocalizedString("This will replace any previous backups. Please leave ben4Store open until the backup is complete.", comment: "")
 
             let alertController = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
             alertController.addAction(.cancel)

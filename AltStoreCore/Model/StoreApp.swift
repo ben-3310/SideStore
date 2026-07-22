@@ -41,8 +41,7 @@ public enum ReleaseTracks: String, CodingKey, CaseIterable
 public extension StoreApp
 {
     static var altstoreAppID: String {
-        // Bundle.Info.storeAppBundleIdentifier
-        Bundle.Info.appbundleIdentifier
+        Bundle.Info.storeAppBundleIdentifier
     }
     
     static let dolphinAppID = "me.oatmealdome.dolphinios-njb"
@@ -721,10 +720,10 @@ public extension StoreApp
         #endif
         
         let app = StoreApp(context: context)
-        app.name = "SideStore"
+        app.name = "ben4Store"
         app.bundleIdentifier = placeholderBundleId
         app.developerName = "Side Team"
-        app.localizedDescription = "SideStore is an alternative App Store."
+        app.localizedDescription = "ben4Store is an alternative App Store."
         app.iconURL = sideStoreAppIconURL        
         app.screenshotURLs = []
         app.sourceIdentifier = placeholderSourceID

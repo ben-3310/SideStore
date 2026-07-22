@@ -9,10 +9,6 @@ import UIKit
 
 @objc(RSTNavigationController)
 public class RSTNavigationController: UINavigationController {
-    open override var shouldAutorotate: Bool {
-        return self.topViewController?.shouldAutorotate ?? super.shouldAutorotate
-    }
-    
     open override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         return self.topViewController?.supportedInterfaceOrientations ?? super.supportedInterfaceOrientations
     }

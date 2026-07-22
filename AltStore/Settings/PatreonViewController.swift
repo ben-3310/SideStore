@@ -70,7 +70,7 @@ final class PatreonViewController: UICollectionViewController, UICollectionViewD
 
     @objc func openPatreonURL(_ sender: UIButton)
     {
-        let patreonURL = URL(string: "https://www.patreon.com/SideStoreIO")!
+        let patreonURL = URL(string: "https://www.patreon.com/ben4StoreIO")!
         
         let safariViewController = SFSafariViewController(url: patreonURL)
         safariViewController.preferredControlTintColor = self.view.tintColor

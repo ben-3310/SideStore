@@ -7,7 +7,7 @@
 		<string>group.$(APP_GROUP_IDENTIFIER)</string>
 	</array>
 	<key>ALTBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>$(MAIN_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>

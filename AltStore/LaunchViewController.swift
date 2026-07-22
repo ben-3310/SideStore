@@ -26,7 +26,7 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        splashView = SplashView(frame: view.bounds, appName: "SideStore")
+        splashView = SplashView(frame: view.bounds, appName: "ben4Store")
         destinationViewController = storyboard!.instantiateViewController(withIdentifier: "tabBarController") as? TabBarController
         view.addSubview(splashView)
     }
@@ -164,8 +164,8 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
 
     @MainActor
     func displayError(_ msg: String) {
-        debugLog("[SideStore] \(msg)")
-        let alert = UIAlertController(title: "Error launching SideStore", message: msg, preferredStyle: .alert)
+        debugLog("[ben4Store] \(msg)")
+        let alert = UIAlertController(title: "Error launching ben4Store", message: msg, preferredStyle: .alert)
         self.present(alert, animated: true)
     }
     
@@ -190,7 +190,7 @@ final class LaunchViewController: UIViewController, UIDocumentPickerDelegate {
             let altCert = try ALTCertificate(p12Data: account.cert, password: account.certpass)
             Keychain.shared.signingCertificate = altCert.encryptedP12Data(withPassword: "")!
             Keychain.shared.signingCertificatePassword = account.certpass
-            let toastView = ToastView(text: NSLocalizedString("Successfully imported '\(account.email)'!", comment: ""), detailText: "SideStore should be fully operational!")
+            let toastView = ToastView(text: NSLocalizedString("Successfully imported '\(account.email)'!", comment: ""), detailText: "ben4Store should be fully operational!")
             return toastView.show(in: self)
         } catch {
             let toastView = ToastView(text: NSLocalizedString("Failed to import account certificate!", comment: ""), detailText: "Error: \(error.localizedDescription). Still imported account/adi.pb details!")
@@ -212,7 +212,7 @@ extension LaunchViewController {
     @MainActor
     func handleLaunchError(_ error: Error, retryCallback: (() async -> Void)? = nil) {
         do { throw error } catch let error as NSError {
-            let title = error.userInfo[NSLocalizedFailureErrorKey] as? String ?? NSLocalizedString("Unable to Launch SideStore", comment: "")
+            let title = error.userInfo[NSLocalizedFailureErrorKey] as? String ?? NSLocalizedString("Unable to Launch ben4Store", comment: "")
             let desc: String
             if #available(iOS 14.5, *) {
                 desc = ([error.debugDescription] + error.underlyingErrors.map { ($0 as NSError).debugDescription }).joined(separator: "\n\n")

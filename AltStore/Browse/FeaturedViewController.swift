@@ -643,7 +643,7 @@ extension FeaturedViewController
             
             buttonView.button.setTitle(NSLocalizedString("See All", comment: ""), for: .normal)
             buttonView.button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
-            buttonView.button.contentEdgeInsets.bottom = 8
+            buttonView.button.alt_setContentInsets(NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
             
             buttonView.button.removeAction(identifiedBy: .showAllApps, for: .primaryActionTriggered)
             

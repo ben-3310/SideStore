@@ -3,7 +3,7 @@
 //  AltStore
 //
 //  Created by Magesh K on 2026-06-29.
-//  Copyright © 2026 SideStore. All rights reserved.
+//  Copyright © 2026 ben4Store. All rights reserved.
 //
 
 import UIKit
@@ -48,7 +48,7 @@ struct DeveloperPortalService {
                 } else if let cert = cert {
                     continuation.resume(returning: cert)
                 } else {
-                    continuation.resume(throwing: NSError(domain: "SideStoreError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create certificate: no certificate returned."]))
+                    continuation.resume(throwing: NSError(domain: "ben4StoreError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create certificate: no certificate returned."]))
                 }
             }
         }

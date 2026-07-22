@@ -3,7 +3,7 @@
 //  AltStore
 //
 //  Created by Magesh K on 2026-06-29.
-//  Copyright © 2026 SideStore. All rights reserved.
+//  Copyright © 2026 ben4Store. All rights reserved.
 //
 
 import SwiftUI
@@ -94,7 +94,7 @@ struct CertificatesView: View {
                     .accessibilityLabel("Toggle Hide Sensitive Information")
                     
                     SwiftUI.Button {
-                        newMachineName = "SideStore - \(UIDevice.current.name)"
+                        newMachineName = "ben4Store - \(UIDevice.current.name)"
                         showCreateDialog = true
                     } label: {
                         Image(systemName: "plus")

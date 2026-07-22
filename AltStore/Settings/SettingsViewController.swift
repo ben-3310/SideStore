@@ -298,7 +298,7 @@ final class SettingsViewController: UITableViewController
             let altCert = try ALTCertificate(p12Data: account.cert, password: account.certpass)
             Keychain.shared.signingCertificate = altCert.encryptedP12Data(withPassword: "")!
             Keychain.shared.signingCertificatePassword = account.certpass
-            let toastView = ToastView(text: NSLocalizedString("Successfully imported '\(account.email)'!", comment: ""), detailText: "SideStore should be fully operational!")
+            let toastView = ToastView(text: NSLocalizedString("Successfully imported '\(account.email)'!", comment: ""), detailText: "ben4Store should be fully operational!")
             return toastView.show(in: self)
         } catch {
             let toastView = ToastView(text: NSLocalizedString("Failed to import account certificate!", comment: ""), detailText: "Error: \(error.localizedDescription). Still imported account/adi.pb details!")
@@ -450,17 +450,17 @@ private extension SettingsViewController
                 version.isEmpty  ? "" : " (\(version))"
             } ?? installedApp.localizedVersion
         
-            versionLabel = NSLocalizedString(String(format: "Version %@", localizedVersion), comment: "SideStore Version")
+            versionLabel = NSLocalizedString(String(format: "Version %@", localizedVersion), comment: "ben4Store Version")
         }
         else if let version = buildInfo.marketing_version
         {
-            versionLabel = NSLocalizedString(String(format: "Version %@", version), comment: "SideStore Version")
+            versionLabel = NSLocalizedString(String(format: "Version %@", version), comment: "ben4Store Version")
         }
         else
         {
-            var version = "SideStore\t"
+            var version = "ben4Store\t"
             version += "\n\(Bundle.Info.appbundleIdentifier)"
-            versionLabel = NSLocalizedString(version, comment: "SideStore Version")
+            versionLabel = NSLocalizedString(version, comment: "ben4Store Version")
         }
         
         // add xcode build version for local builds
@@ -547,7 +547,7 @@ private extension SettingsViewController
             }
             else
             {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Sign in with your Apple ID to download apps from SideStore.", comment: "")
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Sign in with your Apple ID to download apps from ben4Store.", comment: "")
             }
             
         case .patreon:
@@ -557,7 +557,7 @@ private extension SettingsViewController
             }
             else
             {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Support the SideStore Team by following our socials or becoming a patron!", comment: "")
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Support the ben4Store Team by following our socials or becoming a patron!", comment: "")
             }
 
         case .account:
@@ -574,7 +574,7 @@ private extension SettingsViewController
             }
             else
             {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Enable Background Refresh to automatically refresh apps in the background when connected to Wi-Fi. \n\nEnable Disable Idle Timeout to allow SideStore to keep your device awake during a refresh or install of any apps.", comment: "")
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Enable Background Refresh to automatically refresh apps in the background when connected to Wi-Fi. \n\nEnable Disable Idle Timeout to allow ben4Store to keep your device awake during a refresh or install of any apps.", comment: "")
             }
             
         case .display:
@@ -584,7 +584,7 @@ private extension SettingsViewController
             }
             else
             {
-                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Personalize your SideStore experience by choosing an alternate app icon.", comment: "")
+                settingsHeaderFooterView.secondaryLabel.text = NSLocalizedString("Personalize your ben4Store experience by choosing an alternate app icon.", comment: "")
             }
             
             
@@ -849,7 +849,7 @@ private extension SettingsViewController
     func clearCache()
     {
         let makeCacheTitle: (String) -> String = { sizeString in
-            String(format: NSLocalizedString("Are you sure you want to clear SideStore's cache?\n\nCache Size: %@", comment: ""), sizeString)
+            String(format: NSLocalizedString("Are you sure you want to clear ben4Store's cache?\n\nCache Size: %@", comment: ""), sizeString)
         }
         let alertController = UIAlertController(title: makeCacheTitle(NSLocalizedString("Calculating…", comment: "")),
                                                 message: NSLocalizedString("This will remove all temporary files as well as backups for uninstalled apps.", comment: ""),
@@ -972,7 +972,7 @@ private extension SettingsViewController
     
     @IBAction func followAltStoreGitHub()
     {
-        let safariURL = URL(string: "https://github.com/SideStore")!
+        let safariURL = URL(string: "https://github.com/ben4Store")!
         UIApplication.shared.open(safariURL, options: [:])
     }
 }
@@ -1262,7 +1262,7 @@ extension SettingsViewController
                 
                 // Option 1: GitHub
                 alertController.addAction(UIAlertAction(title: "GitHub", style: .default) { _ in
-                    if let githubURL = URL(string: "https://github.com/SideStore/SideStore/issues") {
+                    if let githubURL = URL(string: "https://github.com/ben4Store/ben4Store/issues") {
                         let safariViewController = SFSafariViewController(url: githubURL)
                         safariViewController.preferredControlTintColor = .altPrimary
                         self.present(safariViewController, animated: true, completion: nil)
@@ -1287,9 +1287,9 @@ extension SettingsViewController
 
                         // TODO: MARKETING_VERSION is going to be set anyways so this needs to be fixed for beta
                         if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
-                            mailViewController.setSubject("SideStore Beta \(version) Feedback")
+                            mailViewController.setSubject("ben4Store Beta \(version) Feedback")
                         } else {
-                            mailViewController.setSubject("SideStore Beta Feedback")
+                            mailViewController.setSubject("ben4Store Beta Feedback")
                         }
 
                        self.present(mailViewController, animated: true, completion: nil)
@@ -1411,7 +1411,7 @@ extension SettingsViewController
                 let documentsPath = fm.documentsDirectory.appendingPathComponent("/\(filename)")
                 let alertController = UIAlertController(
                     title: NSLocalizedString("Are you sure to reset the pairing file?", comment: ""),
-                    message: NSLocalizedString("You can reset the pairing file when you cannot sideload apps or enable JIT. You need to restart SideStore.", comment: ""),
+                    message: NSLocalizedString("You can reset the pairing file when you cannot sideload apps or enable JIT. You need to restart ben4Store.", comment: ""),
                     preferredStyle: UIAlertController.Style.actionSheet)
                 
                 alertController.addAction(UIAlertAction(title: NSLocalizedString("Delete and Reset", comment: ""), style: .destructive){ _ in
@@ -1421,7 +1421,7 @@ extension SettingsViewController
                         NSLog("Pairing File Reseted")
                     }
                     self.tableView.deselectRow(at: indexPath, animated: true)
-                    let dialogMessage = UIAlertController(title: NSLocalizedString("Pairing File Reset", comment: ""), message: NSLocalizedString("Please restart SideStore", comment: ""), preferredStyle: .alert)
+                    let dialogMessage = UIAlertController(title: NSLocalizedString("Pairing File Reset", comment: ""), message: NSLocalizedString("Please restart ben4Store", comment: ""), preferredStyle: .alert)
                     self.present(dialogMessage, animated: true, completion: nil)
                 })
                 alertController.addAction(.cancel)
@@ -1455,7 +1455,7 @@ extension SettingsViewController
                 
                 // Instantiate SwiftUI View inside UIHostingController
                 let anisetteServersView = AnisetteServersView(selected: UserDefaults.standard.menuAnisetteURL, errorCallback: {
-                    ToastView(text: "Cleared adi.pb!", detailText: "You will need to log back into Apple ID in SideStore.")
+                    ToastView(text: "Cleared adi.pb!", detailText: "You will need to log back into Apple ID in ben4Store.")
                         .show(in: self)
                 }, refreshCallback: {result in
                     handleRefreshResult(result)
@@ -1502,7 +1502,7 @@ extension SettingsViewController
                     } else {
                         let alert = UIAlertController(
                             title: "Local Network Access Required",
-                            message: "SideStore needs local network access to search for AltServer. Please enable it in Settings.",
+                            message: "ben4Store needs local network access to search for AltServer. Please enable it in Settings.",
                             preferredStyle: .alert
                         )
                         alert.addAction(UIAlertAction(title: "Settings", style: .default) { _ in
@@ -1680,7 +1680,7 @@ extension SettingsViewController
                         return
                     }
                     
-                    let newCertTmpPath = FileManager.default.temporaryDirectory.appendingPathComponent("SideStoreSigningCertificate.p12")
+                    let newCertTmpPath = FileManager.default.temporaryDirectory.appendingPathComponent("ben4StoreSigningCertificate.p12")
                     do {
                         try newCertData.write(to: newCertTmpPath)
                     } catch {

@@ -3,7 +3,7 @@
 //  AltStore
 //
 //  Created by Magesh K on 2026-07-02.
-//  Copyright © 2026 SideStore. All rights reserved.
+//  Copyright © 2026 ben4Store. All rights reserved.
 //
 
 import SwiftUI

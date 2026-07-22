@@ -6,7 +6,7 @@ CURRENT_PROJECT_VERSION = 0604
 
 // Vars to be overwritten by `CodeSigning.xcconfig` if exists
 DEVELOPMENT_TEAM = S32Z3HMYVQ
-ORG_IDENTIFIER = com.SideStore
+ORG_IDENTIFIER = com.ben4Store
 
 // Default is free for CI builds, override it using CodeSigning.xcconfig if required
 CODE_SIGN_ENTITLEMENTS = ./AltStore/AltStoreFree.entitlements
@@ -16,7 +16,7 @@ CODE_SIGN_ENTITLEMENTS = ./AltStore/AltStoreFree.entitlements
 
 PRODUCT_NAME = benStore
 
-BASE_BUNDLE_ID                                  = $(ORG_IDENTIFIER).benStore
+BASE_BUNDLE_ID                                  = $(ORG_IDENTIFIER)
 MAIN_BUNDLE_IDENTIFIER[config=Debug]            = $(BASE_BUNDLE_ID).$(DEVELOPMENT_TEAM)
 MAIN_BUNDLE_IDENTIFIER[config=Release]          = $(BASE_BUNDLE_ID).$(DEVELOPMENT_TEAM)
 APP_GROUP_IDENTIFIER                            = $(MAIN_BUNDLE_IDENTIFIER)

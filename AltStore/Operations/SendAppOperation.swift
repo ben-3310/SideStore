@@ -11,8 +11,7 @@ import Network
 import AltStoreCore
 
 @objc(SendAppOperation)
-final class SendAppOperation: ResultOperation<()>, OperationLogging
-
+final class SendAppOperation: ResultOperation<()>, OperationLogging, @unchecked Sendable
 {
     let context: InstallAppOperationContext
     
@@ -62,11 +61,13 @@ final class SendAppOperation: ResultOperation<()>, OperationLogging
         
         if self.context.shouldTurnOffData {
             // Wait for Shortcut to Finish Before Proceeding
-            await withCheckedContinuation { continuation in
-                let shortcutURLoff = URL(string: "shortcuts://run-shortcut?name=TurnOffData")!
-                UIApplication.shared.open(shortcutURLoff, options: [:]) { _ in
-                    self.debugLog("Shortcut finished execution. Proceeding with file transfer.")
-                    continuation.resume()
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                Task { @MainActor in
+                    let shortcutURLoff = URL(string: "shortcuts://run-shortcut?name=TurnOffData")!
+                    UIApplication.shared.open(shortcutURLoff, options: [:]) { _ in
+                        self.debugLog("Shortcut finished execution. Proceeding with file transfer.")
+                        continuation.resume()
+                    }
                 }
             }
         }

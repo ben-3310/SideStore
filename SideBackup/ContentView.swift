@@ -3,7 +3,7 @@
 //  SideBackup
 //
 //  Created by Magesh K on 2/7/26.
-//  Copyright © 2026 SideStore. All rights reserved.
+//  Copyright © 2026 ben4Store. All rights reserved.
 //
 
 import SwiftUI
@@ -33,7 +33,7 @@ struct ContentView: View {
                         .foregroundColor(Color("Text"))
                         .multilineTextAlignment(.center)
                     
-                    Text(String(format: NSLocalizedString("Refresh %@ in SideStore to continue using it.", comment: ""),
+                    Text(String(format: NSLocalizedString("Refresh %@ in ben4Store to continue using it.", comment: ""),
                                 Bundle.main.appName ?? NSLocalizedString("this app", comment: "")))
                         .font(.body)
                         .foregroundColor(Color("Text"))

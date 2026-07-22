@@ -71,7 +71,7 @@ final class SourcesViewController: UICollectionViewController
         self.placeholderView = RSTPlaceholderView(frame: .zero)
         self.placeholderView.translatesAutoresizingMaskIntoConstraints = false
         self.placeholderView.textLabel.text = NSLocalizedString("Add More Sources!", comment: "")
-        self.placeholderView.detailTextLabel.text = NSLocalizedString("Sources determine what apps are available in SideStore. The more sources you add, the better your SideStore experience will be.\n\nDon’t know where to start? Try adding one of our Recommended Sources!", comment: "")
+        self.placeholderView.detailTextLabel.text = NSLocalizedString("Sources determine what apps are available in ben4Store. The more sources you add, the better your ben4Store experience will be.\n\nDon’t know where to start? Try adding one of our Recommended Sources!", comment: "")
         self.placeholderView.detailTextLabel.textAlignment = .natural
         backgroundView.addSubview(self.placeholderView)
         
@@ -186,7 +186,7 @@ private extension SourcesViewController
     
     func makeDataSource() -> RSTFetchedResultsCollectionViewPrefetchingDataSource<Source, UIImage>
     {
-        // TODO: @mahee96: Need implementation to keep SideStore-Official source always on top
+        // TODO: @mahee96: Need implementation to keep ben4Store-Official source always on top
         let fetchRequest = Source.fetchRequest() as NSFetchRequest<Source>
         fetchRequest.returnsObjectsAsFaults = false
         fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Source.name, ascending: true),
@@ -351,7 +351,7 @@ private extension SourcesViewController
                 case .failure(OperationError.cancelled): break
                     
                 case .failure(var error as SourceError):
-                    let title = String(format: NSLocalizedString("“%@” could not be added to SideStore.", comment: ""), error.$source.name)
+                    let title = String(format: NSLocalizedString("“%@” could not be added to ben4Store.", comment: ""), error.$source.name)
                     error.errorTitle = title
                     self.present(error)
                     

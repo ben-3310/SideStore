@@ -1,0 +1,28 @@
+default_platform(:ios)
+
+CONNECT_DIR = File.expand_path(ENV.fetch("SIDESTORE_CONNECT_DIR"))
+
+platform :ios do
+  desc "Upload IPA to TestFlight/App Store"
+  lane :upload_benstore do |options|
+    app_identifier = ENV.fetch("SIDESTORE_APP_IDENTIFIER")
+    ipa_path = options[:ipa] || ENV["SIDESTORE_IPA_PATH"] || File.join(CONNECT_DIR, "SideStore.ipa")
+    UI.user_error!("IPA not found at #{ipa_path}") unless File.exist?(ipa_path)
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
+      issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
+      key_filepath: ENV.fetch("APP_STORE_CONNECT_KEY_FILEPATH"),
+      duration: ENV.fetch("APP_STORE_CONNECT_TOKEN_DURATION", "1200").to_i,
+      in_house: false
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      ipa: ipa_path,
+      app_identifier: app_identifier,
+      skip_waiting_for_build_processing: true,
+      skip_submission: true
+    )
+  end
+end

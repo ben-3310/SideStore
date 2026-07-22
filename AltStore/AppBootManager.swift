@@ -1,9 +1,9 @@
 //
 //  AppBootManager.swift
-//  SideStore
+//  ben4Store
 //
 //  Created by Magesh K on 9/7/26.
-//  Copyright © 2026 SideStore. All rights reserved.
+//  Copyright © 2026 ben4Store. All rights reserved.
 //
 
 import Foundation

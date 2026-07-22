@@ -70,6 +70,8 @@ test-recording.log
 altstore-sources.md
 local-build.sh
 .build/
+fastlane/report.xml
+fastlane/swift/FastlaneSwiftRunner/
 *.ipa
 *.dSYMs.zip
 

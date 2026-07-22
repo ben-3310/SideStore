@@ -3,7 +3,7 @@
 //  AltStore
 //
 //  Created by Magesh K on 14/01/25.
-//  Copyright © 2025 SideStore. All rights reserved.
+//  Copyright © 2025 ben4Store. All rights reserved.
 //
 
 

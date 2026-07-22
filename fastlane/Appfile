@@ -1,0 +1,2 @@
+app_identifier(ENV.fetch("SIDESTORE_APP_IDENTIFIER"))
+team_id(ENV.fetch("SIDESTORE_TEAM_ID"))
