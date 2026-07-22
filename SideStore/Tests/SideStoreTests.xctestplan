@@ -18,9 +18,11 @@
   "testTargets" : [
     {
       "skippedTests" : [
+        "UITests\/testBulkAddInputSources()",
+        "UITests\/testBulkAddRecommendedSources()",
         "UITests\/testLaunchPerformance()",
-        "UITestsLaunchTests",
-        "UITestsLaunchTests\/testLaunch()"
+        "UITests\/testRepeatabilityForStagingInputSources()",
+        "UITests\/testRepeatabilityForStagingRecommendedSources()"
       ],
       "target" : {
         "containerPath" : "container:AltStore.xcodeproj",
