@@ -6,7 +6,7 @@
 
 **Architecture:** Постоянный macOS ARM64 runner работает под отдельным стандартным пользователем `github-runner-sidestore`, имеет собственные SSH-ключ, HOME, `_work` и кэши и регистрируется только в fork `ben-3310/SideStore`. На него маршрутизируются только `nightly` и `stable`; публичные pull request продолжают выполняться на GitHub-hosted `macos-26`.
 
-**Tech Stack:** macOS 26, Xcode 26.4, iOS 26 SDK/runtime, Homebrew, GitHub Actions runner macOS ARM64, `launchd`, GitHub CLI, SSH, YAML workflows.
+**Tech Stack:** macOS 26, Xcode 26.6, iOS 26 SDK/runtime, Homebrew, GitHub Actions runner macOS ARM64, `launchd`, GitHub CLI, SSH, YAML workflows.
 
 ## Global Constraints
 
@@ -14,7 +14,7 @@
 - Не добавлять `github-runner-sidestore` в `admin` и не выдавать ему `sudo`.
 - Не направлять `pull_request` или иной недоверенный код на постоянный self-hosted runner.
 - Не выводить пароли, registration token, закрытый SSH-ключ и signing secrets.
-- Использовать Xcode 26.4 и labels `self-hosted`, `macOS`, `ARM64`, `sidestore`, `xcode-26-4`.
+- Использовать Xcode 26.6 и labels `self-hosted`, `macOS`, `ARM64`, `sidestore`, `xcode-26-6`.
 - Не публиковать workflow и коммиты без отдельного разрешения пользователя.
 - Сохранять пользовательские незатреканные `.build/`, IPA и dSYM-архивы.
 
@@ -55,7 +55,7 @@ ps -axo user,pid,command | grep '[R]unner.Listener'
 
 Expected: `arm64`, не менее 100 GiB свободно, `china_link` запущен под `ben`.
 
-- [ ] **Step 2: Проверить Xcode 26.4**
+- [ ] **Step 2: Проверить Xcode 26.6**
 
 ```bash
 test -d /Applications/Xcode.app
@@ -65,7 +65,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -showsdks
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun simctl list runtimes
 ```
 
-Expected: Xcode `26.4`, iOS 26 SDK и доступный iOS 26 runtime. Если Xcode ещё устанавливается или версия отличается, не менять workflows и не объявлять runner готовым.
+Expected: Xcode `26.6`, iOS 26 SDK и доступный iOS 26 runtime. Если Xcode ещё устанавливается или версия отличается, не менять workflows и не объявлять runner готовым.
 
 - [ ] **Step 3: Завершить системную инициализацию Xcode**
 
@@ -207,7 +207,7 @@ Expected: password attribute заблокирован значением `*`; п
 - Create: `/Users/github-runner-sidestore/actions-runner/.env`
 
 **Interfaces:**
-- Consumes: Xcode 26.4 и SSH-доступ из Task 2.
+- Consumes: Xcode 26.6 и SSH-доступ из Task 2.
 - Produces: проверенный, ещё не зарегистрированный runner package и доступные SideStore build tools.
 
 - [ ] **Step 1: Установить общие build tools под владельцем Homebrew**
@@ -242,7 +242,7 @@ runner_asset="actions-runner-osx-arm64-${runner_version}.tar.gz"
 runner_url="$(gh api repos/actions/runner/releases/latest \
   --jq ".assets[] | select(.name == \"${runner_asset}\") | .browser_download_url")"
 runner_sha256="$(gh api repos/actions/runner/releases/latest --jq .body | \
-  awk -v asset="$runner_asset" '$0 ~ asset {for (i=1; i<=NF; i++) if ($i ~ /^[0-9a-f]{64}$/) {print $i; exit}}')"
+  sed -n 's/.*BEGIN SHA osx-arm64 -->\([0-9a-f]\{64\}\).*/\1/p')"
 test -n "$runner_url"
 test "${#runner_sha256}" -eq 64
 ```
@@ -305,7 +305,7 @@ cd ~/actions-runner
   --url https://github.com/ben-3310/SideStore \
   --token "$registration_token" \
   --name air-sidestore \
-  --labels sidestore,xcode-26-4 \
+  --labels sidestore,xcode-26-6 \
   --work _work \
   --replace
 unset registration_token
@@ -347,7 +347,7 @@ gh api repos/ben-3310/SideStore/actions/runners \
   --jq '.runners[] | select(.name == "air-sidestore") | {name,os,status,busy,labels:[.labels[].name]}'
 ```
 
-Expected: `status` — `online`, `busy` — `false`; labels содержат `self-hosted`, `macOS`, `ARM64`, `sidestore`, `xcode-26-4`.
+Expected: `status` — `online`, `busy` — `false`; labels содержат `self-hosted`, `macOS`, `ARM64`, `sidestore`, `xcode-26-6`.
 
 - [ ] **Step 5: Проверить отсутствие секретов и влияние на china_link**
 
@@ -376,8 +376,8 @@ python3 - <<'PY'
 from pathlib import Path
 
 expected = {
-    ".github/workflows/nightly.yml": "[self-hosted, macOS, ARM64, sidestore, xcode-26-4]",
-    ".github/workflows/stable.yml": "[self-hosted, macOS, ARM64, sidestore, xcode-26-4]",
+    ".github/workflows/nightly.yml": "[self-hosted, macOS, ARM64, sidestore, xcode-26-6]",
+    ".github/workflows/stable.yml": "[self-hosted, macOS, ARM64, sidestore, xcode-26-6]",
     ".github/workflows/pr.yml": "macos-26",
     ".github/workflows/alpha.yml": "macos-26",
 }
@@ -413,7 +413,19 @@ runs-on: macos-26
 на:
 
 ```yaml
-runs-on: [self-hosted, macOS, ARM64, sidestore, xcode-26-4]
+runs-on: [self-hosted, macOS, ARM64, sidestore, xcode-26-6]
+```
+
+В существующем шаге `Setup Xcode` заменить:
+
+```yaml
+xcode-version: "26.4"
+```
+
+на подтверждённую preflight версию:
+
+```yaml
+xcode-version: "26.6"
 ```
 
 Шаг `brew install ldid xcbeautify` заменить парой:

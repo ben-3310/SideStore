@@ -22,12 +22,16 @@ runner `china_link`, работающий под пользователем `ben
 
 - `pr.yml` — публичные pull request;
 - `alpha.yml` — пока требует Xcode 26.2, тогда как целевой toolchain runner —
-  Xcode 26.4;
+  Xcode 26.6;
 - Linux-задачи `attach_build_products.yml` и `triage.yml`.
 
 Публикация изменений workflow в GitHub выполняется только после отдельного
 разрешения пользователя. До публикации runner может быть зарегистрирован и
 проверен ручным безопасным заданием или локальным smoke-test.
+
+Фактический preflight 2026-07-22 подтвердил установленный Xcode 26.6. Поэтому
+целевой toolchain и label изменены с первоначально запланированного Xcode 26.4
+на Xcode 26.6; установка второго Xcode не требуется.
 
 ## Изоляция учётной записи
 
@@ -51,7 +55,7 @@ runner `china_link`, работающий под пользователем `ben
 
 Перед регистрацией runner проверяются:
 
-- Xcode 26.4 в `/Applications` и выбранный `DEVELOPER_DIR`;
+- Xcode 26.6 в `/Applications` и выбранный `DEVELOPER_DIR`;
 - принятая лицензия и выполненный `xcodebuild -runFirstLaunch`;
 - iOS 26 runtime и доступность требуемого SDK;
 - `xcodebuild`, `xcrun`, `simctl`, `git`, `python3`, `make`, `bash`, `zip`,
@@ -76,7 +80,7 @@ runner `china_link`, работающий под пользователем `ben
 - repository: `https://github.com/ben-3310/SideStore`;
 - имя: `air-sidestore`;
 - стандартные labels: `self-hosted`, `macOS`, `ARM64`;
-- пользовательские labels: `sidestore`, `xcode-26-4`;
+- пользовательские labels: `sidestore`, `xcode-26-6`;
 - рабочий каталог: `_work` внутри каталога runner;
 - автоматическое обновление runner включено.
 
@@ -114,12 +118,12 @@ code signing.
 `runs-on` меняется на:
 
 ```yaml
-runs-on: [self-hosted, macOS, ARM64, sidestore, xcode-26-4]
+runs-on: [self-hosted, macOS, ARM64, sidestore, xcode-26-6]
 ```
 
 Шаг подготовки зависимостей становится условно идемпотентным: на self-hosted
 runner он проверяет `ldid` и `xcbeautify`, а не изменяет Homebrew. Setup Xcode
-должен выбрать уже установленный Xcode 26.4 либо workflow задаёт
+должен выбрать уже установленный Xcode 26.6 либо workflow задаёт
 `DEVELOPER_DIR` напрямую после проверки версии.
 
 `pr.yml` сохраняет `runs-on: macos-26`. Это обязательный security boundary.
@@ -133,7 +137,7 @@ runner он проверяет `ldid` и `xcbeautify`, а не изменяет 
    `github-runner-sidestore`.
 3. Каталоги пользователя, runner, `_work`, SSH и кэшей принадлежат новому
    пользователю и закрыты от других локальных пользователей.
-4. Xcode 26.4, SDK и требуемые CLI-инструменты видны из окружения runner.
+4. Xcode 26.6, SDK и требуемые CLI-инструменты видны из окружения runner.
 5. Runner отображается в `ben-3310/SideStore` как `online` и `idle` с точными
    labels.
 6. `launchd` запускает процесс под правильным UID и восстанавливает его после
@@ -148,7 +152,7 @@ runner он проверяет `ldid` и `xcbeautify`, а не изменяет 
 
 ## Ошибки и остановка
 
-- Если Xcode 26.4 или iOS 26 runtime отсутствуют, регистрация может быть
+- Если Xcode 26.6 или iOS 26 runtime отсутствуют, регистрация может быть
   завершена, но workflow не маршрутизируются и runner не объявляется готовым.
 - Если стандартный пользователь не может использовать toolchain без `admin`,
   выдача `admin` запрещена; устраняется только конкретное системное разрешение.
