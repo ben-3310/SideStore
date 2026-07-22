@@ -157,6 +157,7 @@ def build():
 def tests_build():
     run("mkdir -p build/logs")
     run(
+        "set -o pipefail && "
         "NSUnbufferedIO=YES make -B build-tests "
         "2>&1 | tee -a build/logs/tests-build.log | xcbeautify --renderer github-actions"
     )
@@ -207,7 +208,7 @@ def tests_run(model):
     if not is_sim_booted(model):
         boot_sim_sync(model)
 
-    run("make run-tests 2>&1 | tee -a build/logs/tests-run.log")
+    run("set -o pipefail && make run-tests 2>&1 | tee -a build/logs/tests-run.log")
     run("zip -r -9 ./test-results.zip ./build/tests")
 
 # ----------------------------------------------------------
