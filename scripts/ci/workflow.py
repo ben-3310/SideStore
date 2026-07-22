@@ -146,8 +146,8 @@ def build():
         "NSUnbufferedIO=YES make -B build "
         "2>&1 | tee -a build/logs/build.log | xcbeautify --renderer github-actions"
     )
-    run("make fakesign | tee -a build/logs/build.log")
-    run("make ipa | tee -a build/logs/build.log")
+    run("set -o pipefail && make fakesign | tee -a build/logs/build.log")
+    run("set -o pipefail && make ipa | tee -a build/logs/build.log")
     run("zip -r -9 ./SideStore.dSYMs.zip ./SideStore.xcarchive/dSYMs")
 
 # ----------------------------------------------------------

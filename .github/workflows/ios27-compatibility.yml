@@ -90,7 +90,7 @@ jobs:
         with:
           name: ios27-xcresult-${{ github.run_id }}-${{ github.run_attempt }}
           path: build/tests/test-results.xcresult
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 14
 
       - name: Delete isolated Simulator

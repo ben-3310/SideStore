@@ -76,6 +76,8 @@ class RunnerWorkflowTests(unittest.TestCase):
         self.assertIn("xcrun simctl boot \"$IOS27_SIMULATOR_UDID\"", text)
         self.assertIn("xcrun simctl bootstatus \"$IOS27_SIMULATOR_UDID\" -b", text)
         self.assertIn("path: build/tests/test-results.xcresult", text)
+        self.assertIn("if-no-files-found: error", text)
+        self.assertNotIn("if-no-files-found: warn", text)
         self.assertIn("if: always()", text)
         self.assertIn("xcrun simctl shutdown \"$IOS27_SIMULATOR_UDID\"", text)
         self.assertIn("xcrun simctl delete \"$IOS27_SIMULATOR_UDID\"", text)

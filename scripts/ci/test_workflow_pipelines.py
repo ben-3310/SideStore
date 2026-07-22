@@ -35,6 +35,24 @@ class WorkflowPipelineTests(unittest.TestCase):
         )
         self.assertTrue(build_command.startswith("set -o pipefail && "))
 
+    def test_archive_packaging_propagates_pipeline_failures(self) -> None:
+        with patch.object(self.workflow, "run") as run:
+            self.workflow.build()
+
+        packaging_commands = [
+            call.args[0]
+            for call in run.call_args_list
+            if "make fakesign" in call.args[0] or "make ipa" in call.args[0]
+        ]
+        self.assertEqual(len(packaging_commands), 2)
+        for command in packaging_commands:
+            with self.subTest(command=command):
+                self.assertTrue(command.startswith("set -o pipefail && "))
+
+    def test_pipefail_rejects_failure_before_tee(self) -> None:
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.workflow.run("set -o pipefail && false | true")
+
     def test_tests_run_propagates_pipeline_failures(self) -> None:
         with (
             patch.object(self.workflow, "is_sim_booted", return_value=True),
