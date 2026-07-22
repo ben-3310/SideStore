@@ -47,6 +47,9 @@ public extension OSLog {
 /// Error logger convenience method for ben4Store logging
 /// - Parameters:
 ///   - message: String or format string
+///   - file: Source file where the log was emitted
+///   - function: Function where the log was emitted
+///   - line: Source line where the log was emitted
 ///   - args: optional args for format string
 @inlinable
 public func ELOG(_ message: StaticString, file: StaticString = #file, function: StaticString = #function, line: UInt = #line, _ args: CVarArg...) {
