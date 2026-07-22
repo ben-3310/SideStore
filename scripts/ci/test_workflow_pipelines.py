@@ -24,6 +24,24 @@ class WorkflowPipelineTests(unittest.TestCase):
     def setUp(self) -> None:
         self.workflow = load_workflow_module()
 
+    def test_build_verifies_dependencies_before_make(self) -> None:
+        with (
+            patch.object(self.workflow, "verify_dependencies") as verify,
+            patch.object(self.workflow, "run"),
+        ):
+            self.workflow.build()
+
+        self.assertEqual(verify.call_args.args, (self.workflow.ROOT,))
+
+    def test_tests_build_verifies_dependencies_before_make(self) -> None:
+        with (
+            patch.object(self.workflow, "verify_dependencies") as verify,
+            patch.object(self.workflow, "run"),
+        ):
+            self.workflow.tests_build()
+
+        self.assertEqual(verify.call_args.args, (self.workflow.ROOT,))
+
     def test_tests_build_propagates_pipeline_failures(self) -> None:
         with patch.object(self.workflow, "run") as run:
             self.workflow.tests_build()

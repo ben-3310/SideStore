@@ -8,6 +8,7 @@ import time
 import json
 import re
 from posix import getcwd
+from scripts.ci.dependencies import verify_dependencies
 
 # REPO ROOT relative to script dir
 ROOT = Path(__file__).resolve().parents[2]
@@ -140,6 +141,7 @@ def clean_spm_cache():
 # ----------------------------------------------------------
 
 def build():
+    verify_dependencies(ROOT)
     run("mkdir -p build/logs")
     run(
         "set -o pipefail && "
@@ -155,6 +157,7 @@ def build():
 # ----------------------------------------------------------
 
 def tests_build():
+    verify_dependencies(ROOT)
     run("mkdir -p build/logs")
     run(
         "set -o pipefail && "

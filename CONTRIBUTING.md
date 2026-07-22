@@ -33,6 +33,17 @@ This guide assumes you:
     If you are using GitHub Desktop, refer to
     [this guide](https://docs.github.com/en/desktop/contributing-and-collaborating-using-github-desktop/adding-and-cloning-repositories/cloning-and-forking-repositories-from-github-desktop).
 
+    For local development, you may keep `Dependencies` beside this checkout and
+    replace it with a relative link. Do not run `mv` below if the existing
+    `Dependencies` directory contains uncommitted work. CI and ordinary
+    recursive clones may retain their normal `Dependencies` directory.
+
+    ```zsh
+    mv Dependencies ../SideStore_Dependencies
+    ln -s ../SideStore_Dependencies Dependencies
+    python3 scripts/ci/dependencies.py
+    ```
+
 3. Copy `CodeSigning.xcconfig.sample` to `CodeSigning.xcconfig` and fill in the values.
 4. **(Development only)** Change the value for `ALTDeviceID` in the Info.plist to your device's UDID. Normally, SideServer embeds the device's UDID in SideStore's Info.plist during installation. When
    running through Xcode you'll need to set the value yourself or else SideStore won't resign (or even install) apps for the proper device. You can achieve this by changing a few things to be able to
