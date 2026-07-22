@@ -1,4 +1,9 @@
 from pathlib import Path
+from contextlib import redirect_stderr
+import io
+import json
+import sys
+import tempfile
 import unittest
 
 from scripts.device.run_on_iphone import (
@@ -10,8 +15,11 @@ from scripts.device.run_on_iphone import (
     build_process_info_command,
     build_test_without_building_command,
     build_xcresult_summary_command,
+    contains_running_app,
     parse_test_summary,
+    reset_build_outputs,
     redact_output,
+    run_checked,
     select_device,
 )
 
@@ -81,10 +89,20 @@ class DeviceSelectionTests(unittest.TestCase):
 class CommandTests(unittest.TestCase):
     def test_device_build_and_test_commands_use_exact_destination_and_signing(self):
         build = build_build_for_testing_command("device-1", Path("build/device/DerivedData"))
-        test = build_test_without_building_command("device-1", Path("build/device/SideStore-Device.xcresult"))
+        test = build_test_without_building_command(
+            "device-1",
+            Path("build/device/DerivedData"),
+            Path("build/device/SideStore-Device.xcresult"),
+            development_team="ABC123DE45",
+        )
         self.assertNotIn("platform=iOS Simulator", build)
         self.assertIn("platform=iOS,id=device-1", build)
         self.assertNotIn("CODE_SIGNING_ALLOWED=NO", build)
+        self.assertIn("DEVELOPMENT_TEAM=ABC123DE45", test)
+        self.assertEqual(
+            test[test.index("-derivedDataPath") + 1],
+            "build/device/DerivedData",
+        )
         self.assertIn("-only-testing:UITests/UITestsLaunchTests/testLaunch", test)
 
     def test_install_and_launch_commands_are_argument_lists(self):
@@ -100,10 +118,49 @@ class CommandTests(unittest.TestCase):
 
 
 class ReportingTests(unittest.TestCase):
+    def test_detects_ios_27_process_by_executable_path(self):
+        payload = {
+            "result": {
+                "runningProcesses": [
+                    {
+                        "executable": "file:///private/var/containers/Bundle/Application/<redacted>/SideStore.app/SideStore",
+                        "processIdentifier": 123,
+                    }
+                ]
+            }
+        }
+        self.assertTrue(
+            contains_running_app(payload, "com.example.SideStore", "SideStore")
+        )
+
     def test_redacts_device_identifier_and_uuid_like_values(self):
         output = redact_output("device-1 01234567-89ab-cdef-0123-456789abcdef", "device-1")
         self.assertNotIn("device-1", output)
         self.assertNotIn("01234567-89ab-cdef-0123-456789abcdef", output)
+
+    def test_redacts_signing_team_certificate_and_profile_details(self):
+        output = redact_output(
+            "DEVELOPMENT_TEAM = ABC123DE45\n"
+            "Signing Identity: Apple Development: Local User (ABC123DE45)\n"
+            "Provisioning Profile: iOS Team Provisioning Profile: private.bundle\n"
+            "--sign 0123456789abcdef0123456789abcdef01234567\n",
+            "",
+        )
+        for secret in (
+            "ABC123DE45",
+            "Local User",
+            "private.bundle",
+            "0123456789abcdef0123456789abcdef01234567",
+        ):
+            self.assertNotIn(secret, output)
+
+    def test_redaction_preserves_numeric_json_and_masks_ios_device_udid(self):
+        output = redact_output(
+            '{"finishTime":1753176896.595,"deviceId":"00000000-0000000000000000"}',
+            "",
+        )
+        self.assertEqual(json.loads(output)["finishTime"], 1753176896.595)
+        self.assertNotIn("00000000-0000000000000000", output)
 
     def test_accepts_exactly_one_passed_test(self):
         parse_test_summary({"totalTestCount": 1, "failedTests": 0, "skippedTests": 0})
@@ -120,6 +177,30 @@ class ReportingTests(unittest.TestCase):
 
 
 class OrchestrationCommandTests(unittest.TestCase):
+    def test_run_checked_can_capture_without_streaming_inventory(self):
+        stderr = io.StringIO()
+        with redirect_stderr(stderr):
+            output = run_checked(
+                [sys.executable, "-c", "print('captured')"],
+                stream_output=False,
+            )
+        self.assertEqual(output, "captured\n")
+        self.assertEqual(stderr.getvalue(), "")
+
+    def test_reset_build_outputs_removes_stale_signed_products_and_results(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            derived_data = root / "DerivedData"
+            result_bundle = root / "SideStore-Device.xcresult"
+            (derived_data / "Build/Products").mkdir(parents=True)
+            (derived_data / "Build/Products/stale").write_text("stale")
+            result_bundle.mkdir()
+
+            reset_build_outputs(derived_data, result_bundle)
+
+            self.assertFalse(derived_data.exists())
+            self.assertFalse(result_bundle.exists())
+
     def test_codesign_and_xcresult_commands_are_argument_lists(self):
         codesign = build_codesign_verify_command(Path("build/device/SideStore.app"))
         summary = build_xcresult_summary_command(Path("build/device/SideStore-Device.xcresult"))
