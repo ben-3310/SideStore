@@ -48,7 +48,7 @@ final class DefaultSourcePackImporter
         else { throw URLError(.fileDoesNotExist) }
 
         let data = try Data(contentsOf: url)
-        return try JSONDecoder().decode(DefaultSourcePack.self, from: data)
+        return try Foundation.JSONDecoder().decode(DefaultSourcePack.self, from: data)
     }
 
     private func importSources(from pack: DefaultSourcePack) async -> ImportSummary
