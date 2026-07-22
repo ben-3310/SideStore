@@ -135,7 +135,6 @@
 		A8BD2F6B2F543FD40045335F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		A8BD2FBD2F5440300045335F /* em_proxy.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = em_proxy.xcodeproj; sourceTree = "<group>"; };
 		A8BD2FBE2F5440300045335F /* fetch-prebuilt.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "fetch-prebuilt.sh"; sourceTree = "<group>"; };
-		A8FABA4B2F4B50D00061A851 /* DataStructureTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DataStructureTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8FABA4C2F4B50D00061A851 /* UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B3C39606284F4C8400DA9E2F /* CodeSigning.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CodeSigning.xcconfig; sourceTree = "<group>"; };
 		B3C39607284F4C8400DA9E2F /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
@@ -248,18 +247,6 @@
 			);
 			target = A8E2DB202D684CBD009E5D31 /* UITests */;
 		};
-		A8EECF4C2F4B195000F2436D /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Tests/UnitTests/datastructures/DataStructuresTests.swift,
-				Tests/UnitTests/datastructures/LinkedHashMapTests.swift,
-				Tests/UnitTests/datastructures/TreeMapTests.swift,
-				Utils/datastructures/LinkedHashMap.swift,
-				Utils/datastructures/SingletonGenericMap.swift,
-				Utils/datastructures/TreeMap.swift,
-			);
-			target = A81A8CC42D68BA610086C96F /* DataStructureTests */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
@@ -286,17 +273,10 @@
 		A8EEC3D92F4B0FC800F2436D /* SideBackup */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (A8EEC3E22F4B0FC800F2436D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SideBackup; sourceTree = "<group>"; };
 		A8EEC71D2F4B10D900F2436D /* xcconfigs */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = xcconfigs; sourceTree = "<group>"; };
 		A8EEC8412F4B146A00F2436D /* AltStore */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (A8EEC8CB2F4B146B00F2436D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, A8EEC8CC2F4B146B00F2436D /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */, A8EEC8CD2F4B146B00F2436D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = AltStore; sourceTree = "<group>"; };
-		A8EECF2A2F4B195000F2436D /* SideStore */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (A8EECF492F4B195000F2436D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, A8EECF4A2F4B195000F2436D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, A8EECF4C2F4B195000F2436D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, A8EECF4B2F4B195000F2436D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SideStore; sourceTree = "<group>"; };
+		A8EECF2A2F4B195000F2436D /* SideStore */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (A8EECF492F4B195000F2436D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, A8EECF4A2F4B195000F2436D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, A8EECF4B2F4B195000F2436D /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SideStore; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		A81A8CC22D68BA610086C96F /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A85A51432F4B4532002E2E11 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -452,7 +432,6 @@
 				BF58047B246A28F7008AE704 /* SideBackup.app */,
 				BF66EE7E2501AE50007EE018 /* AltStoreCore.framework */,
 				BF989167250AABF3002ACF50 /* AltWidgetExtension.appex */,
-				A8FABA4B2F4B50D00061A851 /* DataStructureTests.xctest */,
 				A8FABA4C2F4B50D00061A851 /* UITests.xctest */,
 			);
 			name = Products;
@@ -479,23 +458,6 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		A81A8CC42D68BA610086C96F /* DataStructureTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = A81A8CC92D68BA610086C96F /* Build configuration list for PBXNativeTarget "DataStructureTests" */;
-			buildPhases = (
-				A81A8CC12D68BA610086C96F /* Sources */,
-				A81A8CC22D68BA610086C96F /* Frameworks */,
-				A81A8CC32D68BA610086C96F /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = DataStructureTests;
-			productName = DataStructuresTests;
-			productReference = A8FABA4B2F4B50D00061A851 /* DataStructureTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 		A85A51412F4B4532002E2E11 /* em_proxy-swift */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A85A51452F4B4532002E2E11 /* Build configuration list for PBXNativeTarget "em_proxy-swift" */;
@@ -639,9 +601,6 @@
 				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = SideStore;
 				TargetAttributes = {
-					A81A8CC42D68BA610086C96F = {
-						CreatedOnToolsVersion = 16.2;
-					};
 					A8E2DB202D684CBD009E5D31 = {
 						CreatedOnToolsVersion = 16.2;
 						TestTargetID = BFD247692284B9A500981D42;
@@ -703,7 +662,6 @@
 				BF58047A246A28F7008AE704 /* SideBackup */,
 				BF989166250AABF3002ACF50 /* AltWidgetExtension */,
 				A85A51412F4B4532002E2E11 /* em_proxy-swift */,
-				A81A8CC42D68BA610086C96F /* DataStructureTests */,
 				A8E2DB202D684CBD009E5D31 /* UITests */,
 			);
 		};
@@ -720,13 +678,6 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A81A8CC32D68BA610086C96F /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A8E2DB1F2D684CBD009E5D31 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -804,13 +755,6 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A81A8CC12D68BA610086C96F /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A85A51422F4B4532002E2E11 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -890,45 +834,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		A81A8CCA2D68BA610086C96F /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReferenceAnchor = A8EEC71D2F4B10D900F2436D /* xcconfigs */;
-			baseConfigurationReferenceRelativePath = DataStructureTests.xcconfig;
-			buildSettings = {
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		A81A8CCB2D68BA610086C96F /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReferenceAnchor = A8EEC71D2F4B10D900F2436D /* xcconfigs */;
-			baseConfigurationReferenceRelativePath = DataStructureTests.xcconfig;
-			buildSettings = {
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 		A85A51462F4B4532002E2E11 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1001,7 +906,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_VERSION = 5.0;
@@ -1021,7 +925,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_VERSION = 5.0;
@@ -1478,15 +1381,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A81A8CC92D68BA610086C96F /* Build configuration list for PBXNativeTarget "DataStructureTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A81A8CCA2D68BA610086C96F /* Debug */,
-				A81A8CCB2D68BA610086C96F /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		A85A51452F4B4532002E2E11 /* Build configuration list for PBXNativeTarget "em_proxy-swift" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

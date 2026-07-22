@@ -10,7 +10,6 @@ PROJECT_TEXT = PROJECT_FILE.read_text()
 
 TEST_TARGETS = {
     "A8E2DB202D684CBD009E5D31": "UITests",
-    "A81A8CC42D68BA610086C96F": "DataStructureTests",
 }
 
 
@@ -37,15 +36,10 @@ class XcodeTestTargetTests(unittest.TestCase):
                     rf"(?:ui-testing|unit-test)\";",
                 )
 
-        self.assertIn("DataStructureTests.xctest", PROJECT_TEXT)
         self.assertIn("UITests.xctest", PROJECT_TEXT)
 
     def test_xctest_targets_have_build_graph_entries(self) -> None:
         required_ids = (
-            "A81A8CC12D68BA610086C96F",  # DataStructureTests Sources
-            "A81A8CC22D68BA610086C96F",  # DataStructureTests Frameworks
-            "A81A8CC32D68BA610086C96F",  # DataStructureTests Resources
-            "A81A8CC92D68BA610086C96F",  # DataStructureTests configs
             "A8E2DB1D2D684CBD009E5D31",  # UITests Sources
             "A8E2DB1E2D684CBD009E5D31",  # UITests Frameworks
             "A8E2DB1F2D684CBD009E5D31",  # UITests Resources
@@ -67,7 +61,6 @@ class XcodeTestTargetTests(unittest.TestCase):
         targets = native_target_ids()
         plans = (
             REPO_ROOT / "SideStore" / "Tests" / "SideStoreTests.xctestplan",
-            REPO_ROOT / "SideStore" / "Tests" / "DataStructureTests.xctestplan",
         )
 
         for plan_path in plans:
@@ -83,11 +76,6 @@ class XcodeTestTargetTests(unittest.TestCase):
             / "xcshareddata"
             / "xcschemes"
             / "SideStore.xcscheme",
-            REPO_ROOT
-            / "AltStore.xcodeproj"
-            / "xcshareddata"
-            / "xcschemes"
-            / "DataStructuresTests.xcscheme",
         )
         for scheme_path in schemes:
             scheme_text = scheme_path.read_text()
@@ -99,18 +87,17 @@ class XcodeTestTargetTests(unittest.TestCase):
 
     def test_test_target_xcconfigs_define_unique_bundle_ids(self) -> None:
         expected = {
-            "UITests.xcconfig": ".UITests",
-            "DataStructureTests.xcconfig": ".DataStructureTests",
+            "UITests.xcconfig": "$(MAIN_BUNDLE_IDENTIFIER).UITests",
         }
 
-        for filename, suffix in expected.items():
+        for filename, bundle_id in expected.items():
             config_path = REPO_ROOT / "xcconfigs" / filename
             with self.subTest(config=filename):
                 self.assertTrue(config_path.is_file())
                 config = config_path.read_text()
                 self.assertIn('#include "../Build.xcconfig"', config)
                 self.assertIn(
-                    f"PRODUCT_BUNDLE_IDENTIFIER = $(PRODUCT_BUNDLE_IDENTIFIER){suffix}",
+                    f"PRODUCT_BUNDLE_IDENTIFIER = {bundle_id}",
                     config,
                 )
 
