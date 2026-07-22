@@ -101,6 +101,45 @@ class XcodeTestTargetTests(unittest.TestCase):
                     config,
                 )
 
+    def test_ci_plan_runs_only_deterministic_launch_smoke(self) -> None:
+        plan_path = REPO_ROOT / "SideStore" / "Tests" / "SideStoreTests.xctestplan"
+        plan = json.loads(plan_path.read_text())
+        ui_target = next(
+            item
+            for item in plan["testTargets"]
+            if item["target"]["identifier"] == "A8E2DB202D684CBD009E5D31"
+        )
+        skipped = set(ui_target["skippedTests"])
+        network_tests = {
+            "UITests/testBulkAddInputSources()",
+            "UITests/testBulkAddRecommendedSources()",
+            "UITests/testRepeatabilityForStagingInputSources()",
+            "UITests/testRepeatabilityForStagingRecommendedSources()",
+        }
+
+        self.assertTrue(network_tests <= skipped)
+        self.assertNotIn("UITestsLaunchTests", skipped)
+        self.assertNotIn("UITestsLaunchTests/testLaunch()", skipped)
+
+        launch_tests = (
+            REPO_ROOT
+            / "SideStore"
+            / "Tests"
+            / "UITests"
+            / "UITestsLaunchTests.swift"
+        ).read_text()
+        self.assertIn("func testLaunch() throws", launch_tests)
+        self.assertIn("app.wait(for: .runningForeground, timeout: 15)", launch_tests)
+
+        scheme = (
+            REPO_ROOT
+            / "AltStore.xcodeproj"
+            / "xcshareddata"
+            / "xcschemes"
+            / "SideStore.xcscheme"
+        ).read_text()
+        self.assertNotIn("UITests/testExample()", scheme)
+
 
 if __name__ == "__main__":
     unittest.main()
