@@ -52,26 +52,29 @@ class OpenSSLModernizationTests(unittest.TestCase):
 
 
 class RoxasModernizationTests(unittest.TestCase):
-    def test_sendable_declarations_are_unannotated_baseline(self) -> None:
+    def test_inherited_sendable_conformances_are_restatement_explicit(self) -> None:
         declarations = {
-            "AltStoreCore/Extensions/JSONDecoder+Properties.swift": "public final class JSONDecoder: Foundation.JSONDecoder",
-            "AltStoreCore/Model/DatabaseManager/DatabaseManager.swift": "fileprivate class PersistentContainer: RSTPersistentContainer",
-            "AltStoreCore/Roxas/RSTOperation.swift": "open class RSTOperation: Operation",
-            "AltStoreCore/Roxas/RSTBlockOperation.swift": "open class RSTBlockOperation: RSTOperation",
-            "AltStoreCore/Roxas/RSTLoadOperation.swift": "open class RSTLoadOperation: RSTOperation",
-            "AltStoreCore/Roxas/RSTOperationQueue.swift": "open class RSTOperationQueue: OperationQueue",
-            "AltStoreCore/Roxas/RSTPersistentContainer.swift": "public class RSTPersistentContainer: NSPersistentContainer",
-            "Shared/Errors/ALTWrappedError.swift": "public class ALTWrappedError: NSError",
+            "AltStoreCore/Extensions/JSONDecoder+Properties.swift": "public final class JSONDecoder: Foundation.JSONDecoder, @unchecked Sendable",
+            "AltStoreCore/Model/DatabaseManager/DatabaseManager.swift": "fileprivate class PersistentContainer: RSTPersistentContainer, @unchecked Sendable",
+            "AltStoreCore/Roxas/RSTOperation.swift": "open class RSTOperation: Operation, @unchecked Sendable",
+            "AltStoreCore/Roxas/RSTBlockOperation.swift": "open class RSTBlockOperation: RSTOperation, @unchecked Sendable",
+            "AltStoreCore/Roxas/RSTLoadOperation.swift": "open class RSTLoadOperation: RSTOperation, @unchecked Sendable",
+            "AltStoreCore/Roxas/RSTOperationQueue.swift": "open class RSTOperationQueue: OperationQueue, @unchecked Sendable",
+            "AltStoreCore/Roxas/RSTPersistentContainer.swift": "public class RSTPersistentContainer: NSPersistentContainer, @unchecked Sendable",
+            "Shared/Errors/ALTWrappedError.swift": "public class ALTWrappedError: NSError, @unchecked Sendable",
         }
 
         block_operation = source_text("AltStoreCore/Roxas/RSTBlockOperation.swift")
-        self.assertIn("open class RSTAsyncBlockOperation: RSTBlockOperation", block_operation)
+        self.assertIn(
+            "open class RSTAsyncBlockOperation: RSTBlockOperation, @unchecked Sendable",
+            block_operation,
+        )
 
         for relative_path, declaration in declarations.items():
             with self.subTest(source=relative_path):
                 self.assertIn(declaration, source_text(relative_path))
 
-    def test_specialized_data_sources_use_redundant_view_casts_baseline(self) -> None:
+    def test_specialized_data_sources_use_their_concrete_content_view_types(self) -> None:
         data_sources = (
             "AltStoreCore/Roxas/RSTArrayDataSource.swift",
             "AltStoreCore/Roxas/RSTCompositeDataSource.swift",
@@ -81,40 +84,83 @@ class RoxasModernizationTests(unittest.TestCase):
         for relative_path in data_sources:
             with self.subTest(source=relative_path):
                 text = source_text(relative_path)
-                self.assertTrue(
-                    "self.contentView as? UICollectionView" in text
-                    or "self.contentView as? UITableView" in text
+                self.assertNotIn(
+                    "if let collectionView = self.contentView as? UICollectionView,",
+                    text,
                 )
+                self.assertNotIn(
+                    "if let tableView = self.contentView as? UITableView,",
+                    text,
+                )
+                self.assertIn("if let collectionView = self.contentView,", text)
+                self.assertIn("if let tableView = self.contentView,", text)
 
-    def test_fetched_results_checks_window_twice_baseline(self) -> None:
+    def test_fetched_results_checks_window_without_rebinding_nonoptional_value(self) -> None:
         fetched_results = source_text(
             "AltStoreCore/Roxas/RSTFetchedResultsDataSource.swift"
         )
 
-        self.assertIn("if let window = contentView?.window, window != nil", fetched_results)
+        self.assertNotIn(
+            "if let window = contentView?.window, window != nil", fetched_results
+        )
+        self.assertEqual(fetched_results.count("if contentView?.window != nil"), 2)
 
-    def test_uikit_and_foundation_warning_patterns_exist_baseline(self) -> None:
+    def test_constraint_snapshot_cache_result_is_explicitly_discarded(self) -> None:
         merge_policy = source_text(
             "AltStoreCore/Roxas/RSTRelationshipPreservingMergePolicy.swift"
         )
+
+        self.assertIn("_ = NSConstraintConflict.cacheSnapshots(for: conflicts)", merge_policy)
+
+    def test_toast_uses_modern_spinner_style_with_original_white_color(self) -> None:
         toast = source_text("AltStoreCore/Roxas/RSTToastView.swift")
+
+        self.assertIn(
+            "@objc public let activityIndicatorView = UIActivityIndicatorView(style: .medium)",
+            toast,
+        )
+        self.assertIn("activityIndicatorView.color = .white", toast)
+        self.assertNotIn("UIActivityIndicatorView(style: .white)", toast)
+
+    def test_application_activity_indicating_api_is_preserved_as_noop(self) -> None:
         activity = source_text("AltStoreCore/Roxas/UIKit+ActivityIndicating.swift")
+
+        self.assertIn("func startIndicatingActivity() {}", activity)
+        self.assertIn("func stopIndicatingActivity() {}", activity)
+        self.assertNotIn("isNetworkActivityIndicatorVisible", activity)
+
+    def test_collection_view_associated_objects_use_stable_byte_addresses(self) -> None:
         associated_keys = source_text(
             "AltStoreCore/Roxas/UICollectionView+CellContent.swift"
         )
+
+        self.assertIn(
+            "nonisolated(unsafe) static var nestedUpdatesCounter: UInt8 = 0",
+            associated_keys,
+        )
+        self.assertIn(
+            "nonisolated(unsafe) static var operations: UInt8 = 0",
+            associated_keys,
+        )
+        self.assertNotIn('static var nestedUpdatesCounter = "', associated_keys)
+        self.assertNotIn('static var operations = "', associated_keys)
+
+    def test_error_key_order_uses_string_keys_without_redundant_casts(self) -> None:
         errors = source_text("Shared/Extensions/NSError+AltStore.swift")
+
+        self.assertIn("let indexA = preferredKeyOrder.firstIndex(of: a.key)", errors)
+        self.assertIn("let indexB = preferredKeyOrder.firstIndex(of: b.key)", errors)
+        self.assertNotIn('a.key as? String ?? ""', errors)
+        self.assertNotIn('b.key as? String ?? ""', errors)
+
+    def test_operating_system_version_marks_imported_retroactive_conformance(self) -> None:
         os_version = source_text(
             "Shared/Extensions/OperatingSystemVersion+Comparable.swift"
         )
 
-        self.assertIn("NSConstraintConflict.cacheSnapshots(for: conflicts)", merge_policy)
-        self.assertIn("UIActivityIndicatorView(style: .white)", toast)
-        self.assertIn("isNetworkActivityIndicatorVisible", activity)
-        self.assertIn('static var nestedUpdatesCounter = "rst_nestedUpdatesCounter"', associated_keys)
-        self.assertIn('static var operations = "rst_operations"', associated_keys)
-        self.assertIn("a.key as? String ?? \"\"", errors)
-        self.assertIn("b.key as? String ?? \"\"", errors)
-        self.assertIn("extension OperatingSystemVersion: Comparable", os_version)
+        self.assertIn(
+            "extension OperatingSystemVersion: @retroactive Comparable", os_version
+        )
 
 
 if __name__ == "__main__":

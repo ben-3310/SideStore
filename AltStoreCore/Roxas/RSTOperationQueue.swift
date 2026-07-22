@@ -8,7 +8,7 @@
 
 import Foundation
 @objc(RSTOperationQueue)
-open class RSTOperationQueue: OperationQueue {
+open class RSTOperationQueue: OperationQueue, @unchecked Sendable {
     private let operationsMapTable = NSMapTable<AnyObject, Operation>.strongToWeakObjects()
     
     open override func addOperation(_ op: Operation) {

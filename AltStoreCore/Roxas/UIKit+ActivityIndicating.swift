@@ -365,16 +365,7 @@ extension UIApplication: _ActivityIndicating, RSTActivityIndicating {
         activityIndicatingHelper.decrementActivityCount()
     }
     
-    func startIndicatingActivity() {
-        // networkActivityIndicatorVisible is deprecated in iOS 13, but we can compile it
-        #if os(iOS)
-        self.isNetworkActivityIndicatorVisible = true
-        #endif
-    }
+    func startIndicatingActivity() {}
     
-    func stopIndicatingActivity() {
-        #if os(iOS)
-        self.isNetworkActivityIndicatorVisible = false
-        #endif
-    }
+    func stopIndicatingActivity() {}
 }

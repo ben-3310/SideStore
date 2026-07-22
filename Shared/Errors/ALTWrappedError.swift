@@ -8,7 +8,7 @@
 import Foundation
 
 @objc(ALTWrappedError)
-public class ALTWrappedError: NSError {
+public class ALTWrappedError: NSError, @unchecked Sendable {
     
     @objc public let wrappedError: NSError
     

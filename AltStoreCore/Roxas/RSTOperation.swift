@@ -8,7 +8,7 @@
 
 import Foundation
 @objc(RSTOperation)
-open class RSTOperation: Operation {
+open class RSTOperation: Operation, @unchecked Sendable {
     private var _isExecuting = false
     private var _isFinished = false
     
