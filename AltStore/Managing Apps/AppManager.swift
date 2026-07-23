@@ -146,7 +146,7 @@ extension AppManager
                         guard app.isActive else { continue }
                     }
                     
-                    let uti = UTTypeCopyDeclaration(app.installedAppUTI as CFString)?.takeRetainedValue() as NSDictionary?
+                    let uti = UTType(app.installedAppUTI)
                     if uti == nil && !legacySideloadedApps.contains(app.bundleIdentifier)
                     {
                         // This UTI is not declared by any apps, which means this app has been deleted by the user.
@@ -268,7 +268,7 @@ extension AppManager
             guard requiredActiveSlots > availableActiveApps else { return completion(.success(())) }
 
             guard let presentingViewController else {
-                let failureReason = String(format: NSLocalizedString("SideStore needs to deactivate another app before installing %@.", comment: ""), app.name)
+                let failureReason = String(format: NSLocalizedString("ben4Store needs to deactivate another app before installing %@.", comment: ""), app.name)
                 return completion(.failure(OperationError.forbidden(failureReason: failureReason)))
             }
             
@@ -395,7 +395,7 @@ extension AppManager
     {
         let (sourceName, sourceID) = await $source.perform { ($0.name, $0.identifier) }
         guard sourceID != Source.altStoreIdentifier else {
-            throw OperationError.forbidden(failureReason: NSLocalizedString("The default SideStore source cannot be removed.", comment: ""))
+            throw OperationError.forbidden(failureReason: NSLocalizedString("The default ben4Store source cannot be removed.", comment: ""))
         }
         
         let title = String(format: NSLocalizedString("Are you sure you want to remove the source “%@”?", comment: ""), sourceName)
@@ -1249,7 +1249,7 @@ private extension AppManager
         else
         {
             // Disable the idleTimeout
-            DispatchQueue.main.schedule {
+            Task { @MainActor in
                 if !UIApplication.shared.isIdleTimerDisabled {       // accept only once if concurrent
                     UIApplication.shared.isIdleTimerDisabled = UserDefaults.standard.isIdleTimeoutDisableEnabled
                 }
@@ -1380,7 +1380,7 @@ private extension AppManager
                 context.error = error
             case .success(let provisioningProfiles):
                 context.provisioningProfiles = provisioningProfiles
-                debugLog("PROVISIONING PROFILES \(context.provisioningProfiles)")
+                debugLog("PROVISIONING PROFILES \(String(describing: context.provisioningProfiles))")
             }
         }
         fetchProvisioningProfilesOperation.addDependency(refreshAnisetteDataOperation)
@@ -1564,7 +1564,11 @@ private extension AppManager
         
 //        let destinationURL = resignedAppsURL.appendingPathComponent(sourceURL.lastPathComponent)
         let utis = Bundle(url: resignedApp.fileURL)?.infoDictionary?[Bundle.Info.exportedUTIs] as? [[String: Any]]
-        let isSideBackup = utis?.first?["UTTypeDescription"] as? String == "SideStore Backup App"
+        let backupUTIDescriptions = ["SideStore Backup App", "ben4Store Backup App"]
+        let isSideBackup = utis?.contains { uti in
+            guard let description = uti["UTTypeDescription"] as? String else { return false }
+            return backupUTIDescriptions.contains(description)
+        } == true
         
         let destPath = isSideBackup ? resignedApp.name + "-sidebackup" : resignedApp.name
         let destinationURL = resignedAppsURL.appendingPathComponent(destPath + ".app")
@@ -1674,7 +1678,7 @@ private extension AppManager
                 case .failure(ALTServerError.unknownRequest), .failure(OperationError.appNotFound(name: app.name)):
                     // Fall back to installation if AltServer doesn't support newer provisioning profile requests,
                     // OR if the cached app could not be found and we may need to redownload it.
-                    app.managedObjectContext?.performAndWait { // Must performAndWait to ensure we add operations before we return.
+                    _ = app.managedObjectContext?.performAndWait { // Must performAndWait to ensure we add operations before we return.
                         Task {
                             switch await minimuxerStatus {
                             case .ready:
@@ -1982,7 +1986,7 @@ private extension AppManager
                         
                         // Add app-specific exported UTI so we can check later if this temporary backup app is still installed or not.
                         let installedAppUTI = ["UTTypeConformsTo": [],
-                                               "UTTypeDescription": "SideStore Backup App",
+                                               "UTTypeDescription": "ben4Store Backup App",
                                                "UTTypeIconFiles": [],
                                                "UTTypeIdentifier": app.installedBackupAppUTI,
                                                "UTTypeTagSpecification": [:]] as [String : Any]
@@ -2155,8 +2159,8 @@ private extension AppManager
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeIntervalUntilNotification, repeats: false)
         
         let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("SideStore Expiring Soon", comment: "")
-        content.body = NSLocalizedString("SideStore will expire in 24 hours. Open the app and refresh it to prevent it from expiring.", comment: "")
+        content.title = NSLocalizedString("ben4Store Expiring Soon", comment: "")
+        content.body = NSLocalizedString("ben4Store will expire in 24 hours. Open the app and refresh it to prevent it from expiring.", comment: "")
         content.sound = .default
         
         let request = UNNotificationRequest(identifier: AppManager.expirationWarningNotificationID, content: content, trigger: trigger)

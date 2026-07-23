@@ -56,6 +56,8 @@ SideStore/em_proxy/*
 
 # misc
 **/output.txt
+**/__pycache__/
+**/*.pyc
 SideStore/.skip-prebuilt-fetch-minimuxer
 SideStore/.skip-prebuilt-fetch-em_proxy
 
@@ -67,10 +69,17 @@ test-recording.mp4
 test-recording.log
 altstore-sources.md
 local-build.sh
+.build/
+fastlane/report.xml
+fastlane/swift/FastlaneSwiftRunner/
+*.ipa
+*.dSYMs.zip
 
 source-metadata.json
 release-notes.md
 *.md
+!AGENTS.md
+!CLAUDE.md
 *.log
 *.pdf
 *.txt
@@ -81,3 +90,11 @@ Dependencies/minimuxer-*/
 local/
 Dependencies/idevice/
 .worktrees/
+
+# Локальная конфигурация asc и служебное состояние проверки skills
+.asc/config.json
+.asc/skills-check.json
+.asc/*.lock*
+.asc/artifacts/
+.asc/runs/
+!ASC.md

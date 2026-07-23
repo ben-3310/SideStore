@@ -7,12 +7,11 @@
 //
 
 import Foundation
-import AltStoreCore
+@preconcurrency import AltStoreCore
 import CoreData
 
 @objc(RemoveAppOperation)
-final class RemoveAppOperation: ResultOperation<InstalledApp>, OperationLogging
-
+final class RemoveAppOperation: ResultOperation<InstalledApp>, OperationLogging, @unchecked Sendable
 {
     let context: InstallAppOperationContext
     
@@ -59,7 +58,7 @@ final class RemoveAppOperation: ResultOperation<InstalledApp>, OperationLogging
             try backgroundContext.save()
         }
         
-        return try await DatabaseManager.shared.persistentContainer.viewContext.perform {
+        return await DatabaseManager.shared.persistentContainer.viewContext.perform {
             return DatabaseManager.shared.persistentContainer.viewContext.object(with: installedApp.objectID) as! InstalledApp
         }
     }

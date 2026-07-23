@@ -23,7 +23,7 @@
                                 <stackView opaque="NO" contentMode="scaleToFill" alignment="center" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="f7H-EV-7Sx">
                                     <rect key="frame" x="0.0" y="0.0" width="343" height="55"/>
                                     <subviews>
-                                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="SideStore" translatesAutoresizingMaskIntoConstraints="NO" id="pn6-Ic-MJm" userLabel="Icon View">
+                                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ben4Store" translatesAutoresizingMaskIntoConstraints="NO" id="pn6-Ic-MJm" userLabel="Icon View">
                                             <rect key="frame" x="0.0" y="0.0" width="55" height="55"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" constant="55" id="7LH-UB-M1b"/>
@@ -60,9 +60,9 @@
                                 <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" editable="NO" textAlignment="natural" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="FeG-e5-LJl">
                                     <rect key="frame" x="0.0" y="65" width="343" height="124"/>
                                     <color key="backgroundColor" white="1" alpha="0.13" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                    <string key="text">Thank you for using SideStore!
+                                    <string key="text">Thank you for using ben4Store!
         
-Subscribing to the patreon supports us and makes sure we can continue developing SideStore for you.
+Subscribing to the patreon supports us and makes sure we can continue developing ben4Store for you.
     
 Following us on social media allows us to give quick updates and spread the word about sideloading!
         
@@ -132,7 +132,7 @@ Following us on social media allows us to give quick updates and spread the word
         </collectionReusableView>
     </objects>
     <resources>
-        <image name="SideStore" width="512" height="512"/>
+        <image name="ben4Store" width="512" height="512"/>
         <namedColor name="SettingsHighlighted">
             <color red="0.38823529411764707" green="0.011764705882352941" blue="0.58823529411764708" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>

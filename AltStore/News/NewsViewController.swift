@@ -349,7 +349,7 @@ private extension NewsViewController
             }
             else
             {
-                let group = await AppManager.shared.installAsync(storeApp, presentingViewController: self, completionHandler: finish(_:))
+                let group = await AppManager.shared.installAsync(storeApp, presentingViewController: self, completionHandler: { result in Task { @MainActor in finish(result) } })
                 progressUpdateHandler(group.progress)
             }
         }

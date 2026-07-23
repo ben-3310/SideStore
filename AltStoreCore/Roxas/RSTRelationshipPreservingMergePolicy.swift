@@ -18,7 +18,7 @@ open class RSTRelationshipPreservingMergePolicy: NSMergePolicy {
     }
     
     open override func resolve(constraintConflicts conflicts: [NSConstraintConflict]) throws {
-        NSConstraintConflict.cacheSnapshots(for: conflicts)
+        _ = NSConstraintConflict.cacheSnapshots(for: conflicts)
         
         try super.resolve(constraintConflicts: conflicts)
         

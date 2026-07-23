@@ -24,7 +24,7 @@ struct TextLockScreenWidget: Widget
             }
             .supportedFamilies([.accessoryCircular])
             .configurationDisplayName("AltWidget (Text)")
-            .description("View remaining days until SideStore expires.")
+            .description("View remaining days until ben4Store expires.")
         }
         else
         {
@@ -47,7 +47,7 @@ struct IconLockScreenWidget: Widget
             }
             .supportedFamilies([.accessoryCircular])
             .configurationDisplayName("AltWidget (Icon)")
-            .description("View remaining days until SideStore expires.")
+            .description("View remaining days until ben4Store expires.")
         }
         else
         {
@@ -79,9 +79,9 @@ private struct ComplicationView: View
         let totalDays = expirationDate.numberOfCalendarDays(since: refreshedDate)
         let daysRemaining = expirationDate.numberOfCalendarDays(since: self.entry.date)
         
-        let progress = Double(daysRemaining) / Double(totalDays)
+        let rawProgress = totalDays > 0 ? Double(daysRemaining) / Double(totalDays) : 0.0
+        let progress = min(max(rawProgress, 0.0), 1.0)
         
-        // TODO: Gauge initialized with an out-of-bounds progress amount. The amount will be clamped to the nearest bound.
         Gauge(value: progress) {
             if daysRemaining < 0
             {

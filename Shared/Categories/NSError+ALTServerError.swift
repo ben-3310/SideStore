@@ -220,7 +220,7 @@ extension NSError {
                 #if os(macOS)
                 return NSLocalizedString("There was an error connecting to the device.", comment: "")
                 #else
-                return NSLocalizedString("AltServer could not establish a connection to SideStore.", comment: "")
+                return NSLocalizedString("AltServer could not establish a connection to ben4Store.", comment: "")
                 #endif
             }
             return nil
@@ -255,25 +255,25 @@ extension NSError {
             #if os(macOS)
             return NSLocalizedString("There was an error connecting to the device.", comment: "")
             #else
-            return NSLocalizedString("Could not connect to SideStore.", comment: "")
+            return NSLocalizedString("Could not connect to ben4Store.", comment: "")
             #endif
             
         case .lostConnection:
-            return NSLocalizedString("Lost connection to SideStore.", comment: "")
+            return NSLocalizedString("Lost connection to ben4Store.", comment: "")
             
         case .deviceNotFound:
-            return NSLocalizedString("SideStore could not find this device.", comment: "")
+            return NSLocalizedString("ben4Store could not find this device.", comment: "")
             
         case .deviceWriteFailed:
-            return NSLocalizedString("SideStore could not write data to this device.", comment: "")
+            return NSLocalizedString("ben4Store could not write data to this device.", comment: "")
             
         case .invalidRequest:
             let underlyingError = self.userInfo[NSUnderlyingErrorKey] as? NSError
-            return underlyingError?.localizedFailureReason ?? NSLocalizedString("SideStore received an invalid request.", comment: "")
+            return underlyingError?.localizedFailureReason ?? NSLocalizedString("ben4Store received an invalid request.", comment: "")
             
         case .invalidResponse:
             let underlyingError = self.userInfo[NSUnderlyingErrorKey] as? NSError
-            return underlyingError?.localizedFailureReason ?? NSLocalizedString("SideStore sent an invalid response.", comment: "")
+            return underlyingError?.localizedFailureReason ?? NSLocalizedString("ben4Store sent an invalid response.", comment: "")
             
         case .invalidApp:
             return NSLocalizedString("The app is in an invalid format.", comment: "")
@@ -292,15 +292,15 @@ extension NSError {
             let appName = self.userInfo[ALTAppNameErrorKey] as? String
             let osVersion = self.altserver_osVersion
             if appName == nil || osVersion == nil {
-                return NSLocalizedString("Your device must be running iOS 15.0 or later to install SideStore.", comment: "")
+                return NSLocalizedString("Your device must be running iOS 15.0 or later to install ben4Store.", comment: "")
             }
             return String(format: NSLocalizedString("%@ requires %@ or later.", comment: ""), appName!, osVersion!)
             
         case .unknownRequest:
-            return NSLocalizedString("SideStore does not support this request.", comment: "")
+            return NSLocalizedString("ben4Store does not support this request.", comment: "")
             
         case .unknownResponse:
-            return NSLocalizedString("SideStore received an unknown response from SideStore.", comment: "")
+            return NSLocalizedString("ben4Store received an unknown response from ben4Store.", comment: "")
             
         case .invalidAnisetteData:
             return NSLocalizedString("The provided anisette data is invalid.", comment: "")
@@ -348,7 +348,7 @@ extension NSError {
             
         case .maximumFreeAppLimitReached:
             #if os(macOS)
-            return NSLocalizedString("Please deactivate a sideloaded app with SideStore in order to install another app.\n\nIf you're running iOS 13.5 or later, make sure 'Offload Unused Apps' is disabled in Settings > iTunes & App Stores, then install or delete all offloaded apps to prevent them from erroneously counting towards this limit.", comment: "")
+            return NSLocalizedString("Please deactivate a sideloaded app with ben4Store in order to install another app.\n\nIf you're running iOS 13.5 or later, make sure 'Offload Unused Apps' is disabled in Settings > iTunes & App Stores, then install or delete all offloaded apps to prevent them from erroneously counting towards this limit.", comment: "")
             #else
             return NSLocalizedString("Please deactivate a sideloaded app in order to install another one.\n\nIf you're running iOS 13.5 or later, make sure “Offload Unused Apps” is disabled in Settings > iTunes & App Stores, then install or delete all offloaded apps.", comment: "")
             #endif
@@ -415,22 +415,22 @@ extension NSError {
             
         case .invalidRequest:
             let deviceName = (self.userInfo[ALTDeviceNameErrorKey] as? String) ?? NSLocalizedString("The device", comment: "")
-            return String(format: NSLocalizedString("%@ received an invalid request from SideStore.", comment: ""), deviceName)
+            return String(format: NSLocalizedString("%@ received an invalid request from ben4Store.", comment: ""), deviceName)
             
         case .invalidResponse:
             let deviceName = (self.userInfo[ALTDeviceNameErrorKey] as? String) ?? NSLocalizedString("the device", comment: "")
-            return String(format: NSLocalizedString("SideStore received an invalid response from %@.", comment: ""), deviceName)
+            return String(format: NSLocalizedString("ben4Store received an invalid response from %@.", comment: ""), deviceName)
             
         case .usbmuxd:
             return NSLocalizedString("There was an issue communicating with the usbmuxd daemon.", comment: "")
             
         case .ssl:
             let deviceName = (self.userInfo[ALTDeviceNameErrorKey] as? String) ?? NSLocalizedString("the device", comment: "")
-            return String(format: NSLocalizedString("SideStore could not establish a secure connection to %@.", comment: ""), deviceName)
+            return String(format: NSLocalizedString("ben4Store could not establish a secure connection to %@.", comment: ""), deviceName)
             
         case .timedOut:
             let deviceName = (self.userInfo[ALTDeviceNameErrorKey] as? String) ?? NSLocalizedString("the device", comment: "")
-            return String(format: NSLocalizedString("SideStore's connection to %@ timed out.", comment: ""), deviceName)
+            return String(format: NSLocalizedString("ben4Store's connection to %@ timed out.", comment: ""), deviceName)
         }
     }
     

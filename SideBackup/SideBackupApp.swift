@@ -3,7 +3,7 @@
 //  SideBackup
 //
 //  Created by Magesh K on 2/7/26.
-//  Copyright © 2026 SideStore. All rights reserved.
+//  Copyright © 2026 ben4Store. All rights reserved.
 //
 
 import SwiftUI
@@ -101,7 +101,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             UIApplication.shared.open(responseURL, options: [:]) { success in
                 debugLog("[SideBackup]: Sent response to app with success: \(success)")
                 if !success {
-                    debugLog("[SideBackup]: WARNING - Failed to open SideStore return URL. Scheme '\(responseURL.scheme ?? "nil")' may not be registered or SideStore is not installed.")
+                    debugLog("[SideBackup]: WARNING - Failed to open ben4Store return URL. Scheme '\(responseURL.scheme ?? "nil")' may not be registered or ben4Store is not installed.")
                 }
             }
         }

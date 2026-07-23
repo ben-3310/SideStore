@@ -1,9 +1,9 @@
 //
 //  AnisetteManager.swift
-//  SideStore
+//  ben4Store
 //
 //  Created by Joseph Mattiello on 11/16/22.
-//  Copyright © 2022 SideStore. All rights reserved.
+//  Copyright © 2022 ben4Store. All rights reserved.
 //
 
 import Foundation

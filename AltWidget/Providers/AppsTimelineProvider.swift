@@ -63,7 +63,7 @@ class AppsTimelineProviderBase<T>
 
             apps = getUpdatedData(apps, context)
 
-            var entries = self.makeEntries(for: apps, in: context)
+            let entries = self.makeEntries(for: apps, in: context)
             
 //            #if targetEnvironment(simulator)
 //            if let first = entries.first{

@@ -17,9 +17,11 @@ public extension Bundle
         public static let certificateID = "ALTCertificateID"
         public static let appGroups = "ALTAppGroups"
         public static let altBundleID = "ALTBundleIdentifier"
-        public static let storeAppBundleIdentifier =  "com.SideStore.SideStore"
-        // public static var appbundleIdentifier = Bundle.main.bundleIdentifier
-        public static let appbundleIdentifier = "com.SideStore.SideStore"   // for now lets use what we had so far 
+        public static var storeAppBundleIdentifier: String {
+            Bundle.main.infoDictionary?[self.altBundleID] as? String ?? self.appbundleIdentifier
+        }
+
+        public static var appbundleIdentifier: String { Bundle.main.bundleIdentifier ?? "com.SideStore.SideStore" }
 
         public static let devicePairingString = "ALTPairingFile"
         public static let urlTypes = "CFBundleURLTypes"
@@ -58,7 +60,9 @@ public extension Bundle
 
 public extension Bundle
 {
-    static let baseAltStoreAppGroupID = "group." + Bundle.Info.appbundleIdentifier
+    static var baseAltStoreAppGroupID: String {
+        Bundle.main.appGroups.first ?? "group." + Bundle.Info.appbundleIdentifier
+    }
 
     var appGroups: [String] {
         return self.infoDictionary?[Bundle.Info.appGroups] as? [String] ?? []

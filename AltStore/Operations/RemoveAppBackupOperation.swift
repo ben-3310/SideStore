@@ -7,11 +7,10 @@
 //
 
 import Foundation
-import AltStoreCore
+@preconcurrency import AltStoreCore
 
 @objc(RemoveAppBackupOperation)
-final class RemoveAppBackupOperation: ResultOperation<Void>, OperationLogging
-
+final class RemoveAppBackupOperation: ResultOperation<Void>, OperationLogging, @unchecked Sendable
 {
     let context: InstallAppOperationContext
     

@@ -3,7 +3,7 @@
 //  AltStore
 //
 //  Created by Magesh K on 11/07/26.
-//  Copyright © 2026 SideStore. All rights reserved.
+//  Copyright © 2026 ben4Store. All rights reserved.
 //
 
 import SwiftUI
@@ -97,7 +97,6 @@ final class HealthCheckViewModel: ObservableObject {
         let overrideEffective = TunnelConfig.shared.overrideEffective
         
         let pairingType = Minimuxer.shared.getPairingFileType()
-        let isRp = pairingType == .rppairing
         let protocolStr: String
         switch pairingType {
         case .rppairing:
@@ -399,7 +398,7 @@ struct HealthCheckView: View {
                                 Text("System Healthy")
                                     .font(.title2)
                                     .fontWeight(.bold)
-                                Text("SideStore is fully configured and ready.")
+                                Text("ben4Store is fully configured and ready.")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)

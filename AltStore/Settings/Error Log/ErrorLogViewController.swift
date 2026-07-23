@@ -299,7 +299,7 @@ private extension ErrorLogViewController
             previewController.dataSource = dataSource
 
             // Create LogViewManager and start refreshing
-            let manager = LogViewManager(previewController: previewController, logView: self)
+            _ = LogViewManager(previewController: previewController, logView: self)
 //            manager.startRefreshing()     // DO NOT REFRESH the full view contents causing flickering
 
             return previewController

@@ -12,7 +12,7 @@ import AltStoreCore
 import SemanticVersion
 
 @objc(FetchSourceOperation)
-final class FetchSourceOperation: ResultOperation<Source> {
+final class FetchSourceOperation: ResultOperation<Source>, @unchecked Sendable {
     let sourceURL: URL
     let managedObjectContext: NSManagedObjectContext
     

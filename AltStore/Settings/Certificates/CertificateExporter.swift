@@ -3,7 +3,7 @@
 //  AltStore
 //
 //  Created by Magesh K on 2026-07-03.
-//  Copyright © 2026 SideStore. All rights reserved.
+//  Copyright © 2026 ben4Store. All rights reserved.
 //
 
 import UIKit
@@ -56,7 +56,11 @@ enum CertificateExporter {
             return
         }
         let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
-        guard let rootVC = UIApplication.shared.windows.first?.rootViewController else { return }
+        guard let windowScene = UIApplication.shared.connectedScenes
+                .filter({ $0.activationState == .foregroundActive })
+                .compactMap({ $0 as? UIWindowScene })
+                .first,
+              let rootVC = windowScene.keyWindow?.rootViewController else { return }
         let presenter = rootVC.presentedViewController ?? rootVC
         if let popover = activityVC.popoverPresentationController {
             popover.sourceView = presenter.view

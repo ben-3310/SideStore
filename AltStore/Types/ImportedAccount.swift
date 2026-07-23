@@ -3,7 +3,7 @@
 //  AltStore
 //
 //  Created by ny on 9/7/25.
-//  Copyright © 2025 SideStore. All rights reserved.
+//  Copyright © 2025 ben4Store. All rights reserved.
 //
 
 import Foundation

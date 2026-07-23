@@ -8,7 +8,7 @@
 
 import Foundation
 @objc(RSTLoadOperation)
-open class RSTLoadOperation: RSTOperation {
+open class RSTLoadOperation: RSTOperation, @unchecked Sendable {
     @objc open var cacheKey: AnyObject?
     @objc open var resultHandler: ((Any?, Error?) -> Void)?
     

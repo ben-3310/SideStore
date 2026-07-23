@@ -1,15 +1,15 @@
 //
 //  AppExtensionView.swift
-//  SideStore
+//  ben4Store
 //
 //  Created by June P on 8/17/24.
-//  Copyright © 2024 SideStore. All rights reserved.
+//  Copyright © 2024 ben4Store. All rights reserved.
 //
 
 import SwiftUI
 import AltSign
 
-extension ALTApplication: Identifiable {}
+extension ALTApplication: @retroactive Identifiable {}
 
 struct AppExtensionView: View {
     var extensions: Set<ALTApplication>

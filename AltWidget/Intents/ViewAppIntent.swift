@@ -72,6 +72,7 @@ struct InstalledAppQuery: EntityQuery
     }
 }
 
+@available(iOS 17, *)
 @available(iOSApplicationExtension 17, *)
 struct SelectAppIntent: WidgetConfigurationIntent
 {

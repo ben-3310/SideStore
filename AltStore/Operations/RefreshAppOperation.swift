@@ -9,11 +9,10 @@
 import Foundation
 import CoreData
 import AltStoreCore
-import AltSign
+@preconcurrency import AltSign
 
 @objc(RefreshAppOperation)
-final class RefreshAppOperation: ResultOperation<InstalledApp>, OperationLogging
-
+final class RefreshAppOperation: ResultOperation<InstalledApp>, OperationLogging, @unchecked Sendable
 {
     let context: AppOperationContext
     

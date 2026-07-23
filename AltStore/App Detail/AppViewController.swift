@@ -362,10 +362,11 @@ final class AppViewController: UIViewController
         self.bannerView.backgroundEffectView.backgroundColor = .clear
     }
     
+    @available(iOS, deprecated: 17.0)
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?)
     {
         super.traitCollectionDidChange(previousTraitCollection)
-        
+
         if self._viewDidAppear
         {
             self._shouldResetLayout = true

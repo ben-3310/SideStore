@@ -19,7 +19,7 @@ extension BackupAppOperation {
 }
 
 @objc(BackupAppOperation)
-class BackupAppOperation: ResultOperation<Void>, OperationLogging {
+class BackupAppOperation: ResultOperation<Void>, OperationLogging, @unchecked Sendable {
 
     let action: Action
     let context: InstallAppOperationContext

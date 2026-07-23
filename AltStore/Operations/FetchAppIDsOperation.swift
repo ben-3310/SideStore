@@ -9,10 +9,10 @@
 import Foundation
 import CoreData
 import AltStoreCore
-import AltSign
+@preconcurrency import AltSign
 
 @objc(FetchAppIDsOperation)
-final class FetchAppIDsOperation: ResultOperation<([AppID], NSManagedObjectContext)>
+final class FetchAppIDsOperation: ResultOperation<([AppID], NSManagedObjectContext)>, @unchecked Sendable
 {
     let context: AuthenticatedOperationContext
     let managedObjectContext: NSManagedObjectContext

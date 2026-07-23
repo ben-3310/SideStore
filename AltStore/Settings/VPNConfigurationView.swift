@@ -3,7 +3,7 @@
 //  AltStore
 //
 //  Created by Magesh K on 02/03/26.
-//  Copyright © 2026 SideStore. All rights reserved.
+//  Copyright © 2026 ben4Store. All rights reserved.
 //
 
 import SwiftUI
@@ -169,7 +169,7 @@ struct VPNConfigurationView: View {
                 .foregroundColor(textColor ?? (editable ? .secondary : .gray))
                 .disabled(!editable)
                 .keyboardType(.numbersAndPunctuation)
-                .onChange(of: proxy.wrappedValue) { newValue in
+                .onChange(of: proxy.wrappedValue) { _, newValue in
                     guard editable else { return }
                     proxy.wrappedValue =
                         newValue.filter { "0123456789.".contains($0) }

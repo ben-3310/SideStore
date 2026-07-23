@@ -13,7 +13,7 @@ import AltStoreCore
 import AltSign
 
 @objc(DownloadAppOperation)
-final class DownloadAppOperation: ResultOperation<ALTApplication>, OperationLogging {
+final class DownloadAppOperation: ResultOperation<ALTApplication>, OperationLogging, @unchecked Sendable {
     
     @Managed
     private(set) var app: AppProtocol
@@ -175,7 +175,7 @@ final class DownloadAppOperation: ResultOperation<ALTApplication>, OperationLogg
             }
         }
         
-        let dependencies = try await self.downloadDependencies(for: application)
+        _ = try await self.downloadDependencies(for: application)
         
         try FileManager.default.copyItem(at: application.fileURL, to: self.destinationURL, shouldReplace: true)
         
@@ -281,7 +281,7 @@ final class DownloadAppOperation: ResultOperation<ALTApplication>, OperationLogg
     
     private func download(_ dependency: Dependency, for application: ALTApplication) async throws -> URL {
         do {
-            let (fileURL, response) = try await self.session.download(from: dependency.downloadURL)
+            let (fileURL, _) = try await self.session.download(from: dependency.downloadURL)
             defer { try? FileManager.default.removeItem(at: fileURL) }
             
             let path = dependency.path ?? dependency.preferredFilename

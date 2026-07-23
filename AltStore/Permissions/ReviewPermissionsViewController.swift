@@ -195,7 +195,7 @@ extension ReviewPermissionsViewController
                 
             case .unknown:
                 configuration.text = NSLocalizedString("Additional Permissions", comment: "")
-                configuration.secondaryText = String(format: NSLocalizedString("These are permissions required by “%@” that SideStore does not recognize. Make sure you understand them before continuing.", comment: ""), self.app.name)
+                configuration.secondaryText = String(format: NSLocalizedString("These are permissions required by “%@” that ben4Store does not recognize. Make sure you understand them before continuing.", comment: ""), self.app.name)
                 
             case .approve: break
             }
@@ -343,7 +343,7 @@ extension ReviewPermissionsViewController
 @available(iOS 17, *)
 #Preview(traits: .portrait) {
     let navigationController: UINavigationController = {
-        _ = DatabaseManager.shared.startForPreview()
+        DatabaseManager.shared.startForPreview()
         
         let app = AnyApp(name: "Delta", bundleIdentifier: "com.rileytestut.Delta", url: nil, storeApp: nil)
         let permissions: [ALTEntitlement] = [

@@ -44,7 +44,7 @@ private let ReceivedApplicationState: @convention(c) (CFNotificationCenter?, Uns
 }
 
 @objc(BackgroundRefreshAppsOperation)
-final class BackgroundRefreshAppsOperation: ResultOperation<[String: Result<InstalledApp, Error>]>, OperationLogging {
+final class BackgroundRefreshAppsOperation: ResultOperation<[String: Result<InstalledApp, Error>]>, OperationLogging, @unchecked Sendable {
 
     let installedApps: [InstalledApp]
     private let managedObjectContext: NSManagedObjectContext
@@ -113,7 +113,7 @@ final class BackgroundRefreshAppsOperation: ResultOperation<[String: Result<Inst
         )
         
         if #available(iOS 17, *) {
-            // TODO: iOS 17 and above have a new JIT implementation that is completely broken in SideStore :(
+            // TODO: iOS 17 and above have a new JIT implementation that is completely broken in ben4Store :(
         }
 
         await self.managedObjectContext.perform {

@@ -287,13 +287,23 @@ final class CollapsingMarkdownView: UIView {
 }
 
 extension CollapsingMarkdownView: UITextViewDelegate {
-    // This enables tapping on links while preventing text selection
+    // This enables tapping on links while preventing text selection (iOS 16 and earlier)
+    @available(iOS, deprecated: 17.0)
     func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
         // Open the URL using UIApplication
         UIApplication.shared.open(URL)
         return false // Return false to prevent the default behavior
     }
-    
+
+    // This enables tapping on links while preventing text selection (iOS 17+)
+    @available(iOS 17.0, *)
+    func textView(_ textView: UITextView, primaryActionFor textItem: UITextItem, defaultAction: UIAction) -> UIAction? {
+        if case .link(let url) = textItem.content {
+            return UIAction { _ in UIApplication.shared.open(url) }
+        }
+        return nil
+    }
+
     // This prevents text selection
     func textViewDidChangeSelection(_ textView: UITextView) {
         textView.selectedTextRange = nil

@@ -1,9 +1,9 @@
 //
-//  OSLog+SideStore.swift
-//  SideStore
+//  OSLog+ben4Store.swift
+//  ben4Store
 //
 //  Created by Joseph Mattiello on 11/16/22.
-//  Copyright © 2022 SideStore. All rights reserved.
+//  Copyright © 2022 ben4Store. All rights reserved.
 //
 
 import Foundation
@@ -44,16 +44,19 @@ public extension OSLog {
 
 // TODO: Add file,line,function to messages? -- @JoeMatt
 
-/// Error logger convenience method for SideStore logging
+/// Error logger convenience method for ben4Store logging
 /// - Parameters:
 ///   - message: String or format string
+///   - file: Source file where the log was emitted
+///   - function: Function where the log was emitted
+///   - line: Source line where the log was emitted
 ///   - args: optional args for format string
 @inlinable
 public func ELOG(_ message: StaticString, file: StaticString = #file, function: StaticString = #function, line: UInt = #line, _ args: CVarArg...) {
     OSLog.error(message, args)
 }
 
-/// Info logger convenience method for SideStore logging
+/// Info logger convenience method for ben4Store logging
 /// - Parameters:
 ///   - message: String or format string
 ///   - args: optional args for format string
@@ -62,7 +65,7 @@ public func ILOG(_ message: StaticString, file: StaticString = #file, function: 
     OSLog.info(message, args)
 }
 
-/// Debug logger convenience method for SideStore logging
+/// Debug logger convenience method for ben4Store logging
 /// - Parameters:
 ///   - message: String or format string
 ///   - args: optional args for format string

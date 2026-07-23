@@ -3,7 +3,7 @@
 //  AltStore
 //
 //  Created by Magesh K on 2026-06-29.
-//  Copyright © 2026 SideStore. All rights reserved.
+//  Copyright © 2026 ben4Store. All rights reserved.
 //
 
 import SwiftUI
@@ -33,7 +33,7 @@ class CacheViewModel: ObservableObject {
         }
     }
     @Published var showErrorAlert = false
-    
+
     // Deletion states
     @Published var itemToDelete: CacheItem? = nil {
         didSet {
@@ -41,27 +41,20 @@ class CacheViewModel: ObservableObject {
         }
     }
     @Published var showDeleteAlert = false
-    
+
     // Export/Share states
     @Published var activeExportURL: URL? = nil
-    
-    private let byteFormatter: ByteCountFormatter = {
-        let formatter = ByteCountFormatter()
-        formatter.allowedUnits = [.useAll]
-        formatter.countStyle = .file
-        return formatter
-    }()
-    
+
     func loadCacheItems() {
         self.isLoading = true
-        
+
         let internalAppURLs = CacheService.shared.fetchInternalApps()
         let resignedAppURLs = CacheService.shared.fetchResignedApps()
-        
+
         // Fetch all database apps to map display names & icons
         let context = DatabaseManager.shared.viewContext
         var dbAppsMap: [String: (name: String, fileURL: URL, alternateIconURL: URL, hasAlternateIcon: Bool)] = [:]
-        
+
         context.performAndWait {
             let apps = InstalledApp.all(in: context)
             for app in apps {
@@ -73,24 +66,28 @@ class CacheViewModel: ObservableObject {
                 )
             }
         }
-        
+
         // Process on background queue
         DispatchQueue.global(qos: .userInitiated).async {
+            let byteFormatter = ByteCountFormatter()
+            byteFormatter.allowedUnits = [.useAll]
+            byteFormatter.countStyle = .file
+
             var internalItems: [CacheItem] = []
             var resignedItems: [CacheItem] = []
-            
+
             // 1. Process Internal Cache Items
             for url in internalAppURLs {
                 let bundleID = url.lastPathComponent
                 let size = CacheService.shared.calculateSize(of: url)
-                let sizeStr = self.byteFormatter.string(fromByteCount: size)
-                
+                let sizeStr = byteFormatter.string(fromByteCount: size)
+
                 var displayName = bundleID
                 var iconImage: UIImage? = nil
-                
+
                 if let dbInfo = dbAppsMap[bundleID] {
                     displayName = dbInfo.name
-                    
+
                     if dbInfo.hasAlternateIcon,
                        let data = try? Data(contentsOf: dbInfo.alternateIconURL) {
                         iconImage = UIImage(data: data)
@@ -98,7 +95,7 @@ class CacheViewModel: ObservableObject {
                         iconImage = appIcon
                     }
                 }
-                
+
                 let item = CacheItem(
                     id: bundleID,
                     name: displayName,
@@ -111,21 +108,21 @@ class CacheViewModel: ObservableObject {
                 )
                 internalItems.append(item)
             }
-            
+
             // 2. Process Resigned App Items
             for url in resignedAppURLs {
                 let filename = url.lastPathComponent
                 let size = CacheService.shared.calculateSize(of: url)
-                let sizeStr = self.byteFormatter.string(fromByteCount: size)
-                
+                let sizeStr = byteFormatter.string(fromByteCount: size)
+
                 let displayName = filename.replacingOccurrences(of: ".app", with: "")
                                           .replacingOccurrences(of: ".ipa", with: "")
-                
+
                 var iconImage: UIImage? = nil
                 if let appIcon = ALTApplication(fileURL: url)?.icon {
                     iconImage = appIcon
                 }
-                
+
                 let item = CacheItem(
                     id: filename,
                     name: displayName,
@@ -138,11 +135,11 @@ class CacheViewModel: ObservableObject {
                 )
                 resignedItems.append(item)
             }
-            
+
             // Sort by size descending
             internalItems.sort { $0.sizeInBytes > $1.sizeInBytes }
             resignedItems.sort { $0.sizeInBytes > $1.sizeInBytes }
-            
+
             DispatchQueue.main.async {
                 self.internalApps = internalItems
                 self.resignedApps = resignedItems
@@ -150,10 +147,10 @@ class CacheViewModel: ObservableObject {
             }
         }
     }
-    
+
     func deleteItem(_ item: CacheItem) {
         self.isLoading = true
-        
+
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 try CacheService.shared.delete(at: item.url)

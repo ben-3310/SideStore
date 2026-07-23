@@ -3,7 +3,7 @@
 //  AltStore
 //
 //  Created by Magesh K on 2026-06-29.
-//  Copyright © 2026 SideStore. All rights reserved.
+//  Copyright © 2026 ben4Store. All rights reserved.
 //
 
 import SwiftUI
@@ -118,27 +118,27 @@ class CertificatesViewModel: ObservableObject {
     func loadLocalCertificates() -> [ALTCertificate] {
         var localCerts: [ALTCertificate] = []
         let serials = UserDefaults.standard.stringArray(forKey: "importedCertificateSerials") ?? []
-        debugLog("[SideStore] loadLocalCertificates, serials: \(serials)")
+        debugLog("[ben4Store] loadLocalCertificates, serials: \(serials)")
         for serial in serials {
             do {
                 if let data = try self.certificateKeychain.getData("importedCert_" + serial) {
-                    debugLog("[SideStore]   Retrieved data size: \(data.count) for \(serial)")
+                    debugLog("[ben4Store]   Retrieved data size: \(data.count) for \(serial)")
                     var loadedCert: ALTCertificate?
                     do {
                         loadedCert = try ALTCertificate(p12Data: data, password: "")
-                        debugLog("[SideStore]   Parsed as p12 empty pass")
+                        debugLog("[ben4Store]   Parsed as p12 empty pass")
                     } catch {
-                        debugLog("[SideStore]   Failed p12 empty pass: \(error)")
+                        debugLog("[ben4Store]   Failed p12 empty pass: \(error)")
                         do {
                             loadedCert = try ALTCertificate(p12Data: data, password: nil)
-                            debugLog("[SideStore]   Parsed as p12 nil pass")
+                            debugLog("[ben4Store]   Parsed as p12 nil pass")
                         } catch {
-                            debugLog("[SideStore]   Failed p12 nil pass: \(error)")
+                            debugLog("[ben4Store]   Failed p12 nil pass: \(error)")
                             if let cert = ALTCertificate(data: data) {
                                 loadedCert = cert
-                                debugLog("[SideStore]   Parsed as raw cert")
+                                debugLog("[ben4Store]   Parsed as raw cert")
                             } else {
-                                debugLog("[SideStore]   Failed raw cert parsing")
+                                debugLog("[ben4Store]   Failed raw cert parsing")
                             }
                         }
                     }
@@ -152,35 +152,35 @@ class CertificatesViewModel: ObservableObject {
                         localCerts.append(cert)
                     }
                 } else {
-                    debugLog("[SideStore]   No data found in keychain for importedCert_\(serial)")
+                    debugLog("[ben4Store]   No data found in keychain for importedCert_\(serial)")
                 }
             } catch {
-                debugLog("[SideStore]   Keychain error for importedCert_\(serial): \(error)")
+                debugLog("[ben4Store]   Keychain error for importedCert_\(serial): \(error)")
             }
         }
         return localCerts
     }
     
     func saveLocalCertificate(_ cert: ALTCertificate) {
-        debugLog("[SideStore] saveLocalCertificate serial: \(cert.serialNumber)")
+        debugLog("[ben4Store] saveLocalCertificate serial: \(cert.serialNumber)")
         if cert.privateKey != nil, let p12Data = cert.p12Data() {
-            debugLog("[SideStore]   p12Data generated, size: \(p12Data.count)")
+            debugLog("[ben4Store]   p12Data generated, size: \(p12Data.count)")
             do {
                 try self.certificateKeychain.set(p12Data, key: "importedCert_" + cert.serialNumber)
-                debugLog("[SideStore]   Successfully saved p12 to keychain")
+                debugLog("[ben4Store]   Successfully saved p12 to keychain")
             } catch {
-                debugLog("[SideStore]   Failed to save p12 to keychain: \(error)")
+                debugLog("[ben4Store]   Failed to save p12 to keychain: \(error)")
             }
         } else if let derData = cert.data {
-            debugLog("[SideStore]   derData exists, size: \(derData.count)")
+            debugLog("[ben4Store]   derData exists, size: \(derData.count)")
             do {
                 try self.certificateKeychain.set(derData, key: "importedCert_" + cert.serialNumber)
-                debugLog("[SideStore]   Successfully saved derData to keychain")
+                debugLog("[ben4Store]   Successfully saved derData to keychain")
             } catch {
-                debugLog("[SideStore]   Failed to save derData to keychain: \(error)")
+                debugLog("[ben4Store]   Failed to save derData to keychain: \(error)")
             }
         } else {
-            debugLog("[SideStore]   No data available to save")
+            debugLog("[ben4Store]   No data available to save")
             return
         }
         var serials = UserDefaults.standard.stringArray(forKey: "importedCertificateSerials") ?? []

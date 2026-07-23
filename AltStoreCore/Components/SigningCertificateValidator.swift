@@ -89,7 +89,8 @@ public struct SigningCertificateValidator {
                 activeCertificates.contains { $0.serialNumber == profileCert.serialNumber }
             }
             let runningCert = activeProfileCert ?? runningProfile.certificates.first ?? signerCertificate
-            if let machineName = runningCert.machineName, (machineName.starts(with: "SideStore") || machineName.starts(with: "AltStore")) {
+            if let machineName = runningCert.machineName,
+               ["ben4Store", "SideStore", "AltStore"].contains(where: { machineName.starts(with: $0) }) {
                 return .failure(.privateKeyLost)
             } else {
                 return .failure(.externalSigner)

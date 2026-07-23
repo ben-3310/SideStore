@@ -1,9 +1,9 @@
 //
 //  AnisetteServerList.swift
-//  SideStore
+//  ben4Store
 //
 //  Created by ny on 6/18/24.
-//  Copyright © 2024 SideStore. All rights reserved.
+//  Copyright © 2024 ben4Store. All rights reserved.
 //
 
 import UIKit
@@ -28,14 +28,14 @@ class AnisetteViewModel: ObservableObject {
 
     @Published var source: String = "https://servers.sidestore.io/servers.json"
     @Published var servers: [Server] = []
-    
+
     init() {
         // using the custom Anisette list
         if !UserDefaults.standard.menuAnisetteList.isEmpty {
             self.source = UserDefaults.standard.menuAnisetteList
         }
     }
-    
+
     @MainActor
     func getCurrentListOfServers(_ completionHandler: @escaping (Result<Void, Error>) -> Void = {_ in }) {
         // dispatch fetch operation but don't do a blocking wait for results
@@ -52,7 +52,7 @@ class AnisetteViewModel: ObservableObject {
             }
         }
     }
-    
+
     static func getListOfServers(serverSource: String) async throws -> [Server] {
         var aniServers: [Server] = []
 
@@ -67,14 +67,14 @@ class AnisetteViewModel: ObservableObject {
         do {
             // Use async/await pattern here, avoiding CheckedContinuation directly
             let (data, response) = try await URLSession.shared.data(for: request)
-            
+
             // Check if the response is valid and has a 2xx HTTP status code
             guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
                 // Handle non-2xx status codes
                 let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
                 throw NSError(domain: "AnisetteViewModel: ServerError", code: statusCode, userInfo: [NSLocalizedDescriptionKey: "Request failed with status code: \(statusCode)"])
             }
-            
+
             let decoder = Foundation.JSONDecoder()
             let servers = try decoder.decode(AnisetteServerData.self, from: data)
             debugLog("AnisetteViewModel: JSON Decode successful for sourceURL: \(serverSource) servers: \(servers)")
@@ -103,77 +103,79 @@ struct AnisetteServersView: View {
     var errorCallback: () -> ()
     var refreshCallback: (Result<Void, any Error>) -> Void
 
-    var body: some View {
-        ZStack {
-            Color(UIColor.systemBackground)
-                .ignoresSafeArea()
-                .onAppear {
-                    viewModel.getCurrentListOfServers(refreshCallback)
+    private var serverList: AnyView {
+        if #available(iOS 16.0, *) {
+            return AnyView(
+                SwiftUI.List($viewModel.servers, id: \.address, selection: $selected) { server in
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("\(server.name.wrappedValue)")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            Text("\(server.address.wrappedValue)")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        if selected != nil {
+                            if server.address.wrappedValue == selected {
+                                Spacer()
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.accentColor)
+                                    .onAppear {
+                                        UserDefaults.standard.menuAnisetteURL = server.address.wrappedValue
+                                        debugLog("\(UserDefaults.synchronize(.standard)())")
+                                        debugLog("\(UserDefaults.standard.menuAnisetteURL)")
+                                        debugLog("\(server.address.wrappedValue)")
+                                    }
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(RoundedRectangle(cornerRadius: 10).fill(Color(UIColor.secondarySystemBackground)))
+                    .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 5)
                 }
-            VStack {
-                if #available(iOS 16.0, *) {
-                    SwiftUI.List($viewModel.servers, id: \.address, selection: $selected) { server in
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .listRowBackground(Color(UIColor.systemBackground))
+            )
+        }
+
+        return AnyView(
+            List(selection: $selected) {
+                ForEach($viewModel.servers, id: \.name) { server in
+                    VStack {
                         HStack {
-                            VStack(alignment: .leading) {
-                                Text("\(server.name.wrappedValue)")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                Text("\(server.address.wrappedValue)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
-                            Spacer()
-                            if selected != nil {
-                                if server.address.wrappedValue == selected {
-                                    Spacer()
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.accentColor)
-                                        .onAppear {
-                                            UserDefaults.standard.menuAnisetteURL = server.address.wrappedValue
-                                            debugLog("\(UserDefaults.synchronize(.standard)())")
-                                            debugLog("\(UserDefaults.standard.menuAnisetteURL)")
-                                            debugLog("\(server.address.wrappedValue)")
-                                        }
-                                }
-                            }
+                            Text("\(server.name.wrappedValue)")
+                                .foregroundColor(.primary)
+                                .frame(alignment: .center)
+                            Text("\(server.address.wrappedValue)")
+                                .foregroundColor(.secondary)
+                                .frame(alignment: .center)
                         }
-                        .padding()
-                        .background(RoundedRectangle(cornerRadius: 10).fill(Color(UIColor.secondarySystemBackground)))
-                        .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 5)
                     }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .listRowBackground(Color(UIColor.systemBackground))
-                } else {
-                    List(selection: $selected) {
-                        ForEach($viewModel.servers, id: \.name) { server in
-                            VStack {
-                                HStack {
-                                    Text("\(server.name.wrappedValue)")
-                                        .foregroundColor(.primary)
-                                        .frame(alignment: .center)
-                                    Text("\(server.address.wrappedValue)")
-                                        .foregroundColor(.secondary)
-                                        .frame(alignment: .center)
-                                }
-                            }
-                            Spacer()
-                        }
-                        .padding()
-                        .background(RoundedRectangle(cornerRadius: 10).fill(Color(UIColor.secondarySystemBackground)))
-                        .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 5)
-                    }
-                    .listStyle(.plain)
+                    Spacer()
                 }
-                
-                VStack(spacing: 16) {
+                .padding()
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color(UIColor.secondarySystemBackground)))
+                .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 5)
+            }
+            .listStyle(.plain)
+        )
+    }
+
+    var body: some View {
+        VStack {
+            self.serverList
+
+            VStack(spacing: 16) {
                     TextField("Anisette Server List", text: $viewModel.source)
                         .padding()
                         .background(RoundedRectangle(cornerRadius: 10).fill(Color(UIColor.secondarySystemFill)))
                         .foregroundColor(.primary)
                         .frame(height: 60)
                         .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 5)
-                        .onChange(of: viewModel.source) { newValue in
+                        .onChange(of: viewModel.source) { _, newValue in
                             UserDefaults.standard.menuAnisetteList = newValue
 //                            viewModel.getCurrentListOfServers(refreshCallback)        // don't spam
                             viewModel.getCurrentListOfServers()
@@ -212,7 +214,7 @@ struct AnisetteServersView: View {
                         .background(RoundedRectangle(cornerRadius: 10).fill(Color.accentColor))
                         .foregroundColor(.white)
                         .shadow(color: Color.accentColor.opacity(0.4), radius: 10, x: 0, y: 5)
-                        
+
                     }
 
                     SUIButton(action: {
@@ -250,8 +252,11 @@ struct AnisetteServersView: View {
                 .padding(.horizontal)
                 .padding(.bottom)
             }
-        }
-        .navigationBarHidden(true)
-        .navigationTitle("")
+            .onAppear {
+                viewModel.getCurrentListOfServers(refreshCallback)
+            }
+            .background(Color(UIColor.systemBackground).ignoresSafeArea())
+            .navigationBarHidden(true)
+            .navigationTitle("")
     }
 }

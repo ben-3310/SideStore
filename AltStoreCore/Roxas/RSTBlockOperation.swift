@@ -8,7 +8,7 @@
 
 import Foundation
 @objc(RSTBlockOperation)
-open class RSTBlockOperation: RSTOperation {
+open class RSTBlockOperation: RSTOperation, @unchecked Sendable {
     @objc public let executionBlock: (RSTBlockOperation) -> Void
     @objc open var cancellationBlock: (() -> Void)?
     
@@ -34,7 +34,7 @@ open class RSTBlockOperation: RSTOperation {
 }
 
 @objc(RSTAsyncBlockOperation)
-open class RSTAsyncBlockOperation: RSTBlockOperation {
+open class RSTAsyncBlockOperation: RSTBlockOperation, @unchecked Sendable {
     open override var isAsynchronous: Bool {
         return true
     }
